@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تسجيل الدخول — Prime</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Tahoma,Arial,sans-serif}
+body{background:radial-gradient(ellipse at top,#1a1f0e 0%,#0a0c06 60%);color:#e8f0d8;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
+.glass{background:rgba(20,26,12,.85);backdrop-filter:blur(14px);border:1px solid rgba(139,195,74,.2);border-radius:20px;padding:32px 28px;width:100%;max-width:400px}
+.grad{background:linear-gradient(90deg,#9CCC65,#C0CA33);-webkit-background-clip:text;background-clip:text;color:transparent}
+.grad-btn{background:linear-gradient(90deg,#558B2F,#8BC34A);color:#0d1505;border:none;cursor:pointer;transition:.2s;font-weight:700;width:100%;padding:13px;border-radius:10px;font-size:15px;margin-top:6px}
+.grad-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(139,195,74,.4)}
+.grad-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.inp{width:100%;padding:11px 14px;border-radius:10px;border:1px solid rgba(139,195,74,.25);background:rgba(10,14,6,.9);color:#e8f0d8;font-size:14px;outline:none;margin-bottom:14px}
+.inp:focus{border-color:#8BC34A}
+.lbl{font-size:12px;color:#AED581;display:block;margin-bottom:6px;font-weight:600}
+.logo{width:56px;height:56px;margin:0 auto 12px;border-radius:16px;background:linear-gradient(135deg,#558B2F,#8BC34A);display:flex;align-items:center;justify-content:center;font-weight:800;color:#0d1505;font-size:26px}
+h2{font-size:20px;font-weight:800;text-align:center;margin-bottom:4px}
+.mode-badge{display:inline-block;padding:4px 14px;border-radius:20px;font-size:11px;font-weight:700;margin:8px auto 20px;display:block;text-align:center;width:fit-content}
+.mode-user{background:rgba(59,130,246,.2);color:#93c5fd}
+.mode-agent{background:rgba(139,195,74,.2);color:#AED581}
+.err-msg{color:#f87171;font-size:12px;text-align:center;min-height:18px;margin-bottom:8px}
+.back-link{display:block;text-align:center;margin-top:16px;font-size:12px;color:#6b7a55;cursor:pointer;text-decoration:none}
+.back-link:hover{color:#AED581}
+</style>
+</head>
+<body>
+<div class="glass">
+  <div class="logo">P</div>
+  <h2 class="grad">Prime website</h2>
+  <div id="modeBadge" class="mode-badge"></div>
+  <div class="err-msg" id="loginErr"></div>
+  <label class="lbl">اسم المستخدم</label>
+  <input id="inpUser" class="inp" placeholder="اسم المستخدم" autocomplete="off"/>
+  <label class="lbl">كلمة المرور</label>
+  <input id="inpPass" type="password" class="inp" placeholder="كلمة المرور"/>
+  <button class="grad-btn" id="loginBtn" onclick="doLogin()">دخول فوري</button>
+  <a href="index.html" class="back-link">→ العودة للرئيسية</a>
+</div>
+<script>
+var mode = new URLSearchParams(location.search).get("mode") || "user";
+document.getElementById("modeBadge").textContent = mode === "agent" ? "🛡️ دخول وكلاء الدعم" : "👤 دخول الأعضاء";
+document.getElementById("modeBadge").className = "mode-badge " + (mode === "agent" ? "mode-agent" : "mode-user");
+
+async function doLogin(){
+  var u=document.getElementById("inpUser").value.trim();
+  var p=document.getElementById("inpPass").value;
+  var err=document.getElementById("loginErr");
+  var btn=document.getElementById("loginBtn");
+  if(!u||!p){err.textContent="املأ جميع الحقول";return;}
+  btn.disabled=true;btn.textContent="جاري التحقق...";
+  // مهلة 20 ثانية كحد أقصى
+  var controller=new AbortController();
+  var timeout=setTimeout(function(){controller.abort();},20000);
+  try{
+    var r=await fetch("/api/"+(mode==="agent"?"agent":"user")+"/login",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({username:u,password:p}),
+      signal:controller.signal
+    });
+    clearTimeout(timeout);
+    var d=await r.json();
+    if(d.success){
+      if(mode==="agent"&&d.token){
+        if(mode==="user"){err.textContent="هذا الحساب وكيل دعم — استخدم دخول الوكلاء";btn.disabled=false;btn.textContent="دخول فوري";return;}
+      }
+      localStorage.setItem("prime_token",d.token);
+      localStorage.setItem("prime_user",d.username);
+      localStorage.setItem("prime_role",mode==="agent"?"agent":"user");
+      window.location.href=mode==="agent"?"dashboard.html":"prime-dash.html";
+    }else{
+      err.textContent=d.error||"بيانات خاطئة";
+      btn.disabled=false;btn.textContent="دخول فوري";
+    }
+  }catch(e){
+    clearTimeout(timeout);
+    err.textContent=e.name==="AbortError"?"استغرق وقتاً طويلاً، حاول مرة أخرى":"خطأ في الاتصال";
+    btn.disabled=false;btn.textContent="دخول فوري";
+  }
+}
+document.getElementById("inpPass").addEventListener("keydown",function(e){if(e.key==="Enter")doLogin();});
+</script>
+</body>
+</html>

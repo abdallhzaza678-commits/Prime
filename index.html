@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>برايم بلانكلزي — لوحة تحكم البوتات</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:radial-gradient(ellipse at top,#1a1f0e 0%,#0a0c06 60%);color:#e8f0d8;min-height:100vh}
+.glass{background:rgba(20,26,12,.85);backdrop-filter:blur(14px);border:1px solid rgba(139,195,74,.2)}
+.grad{background:linear-gradient(90deg,#9CCC65,#C0CA33);-webkit-background-clip:text;background-clip:text;color:transparent}
+.grad-btn{background:linear-gradient(90deg,#558B2F,#8BC34A);color:#0d1505;border:none;cursor:pointer;transition:.2s;font-weight:700}
+.grad-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(139,195,74,.4)}
+.inp{width:100%;padding:11px 14px;border-radius:10px;border:1px solid rgba(139,195,74,.25);background:rgba(10,14,6,.9);color:#e8f0d8;font-size:13px;outline:none;margin-bottom:10px}
+.inp:focus{border-color:#8BC34A}
+.lbl{font-size:12px;color:#AED581;display:block;margin-bottom:5px}
+.fade{animation:fade .4s ease}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.pulse{animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.toast{animation:toast .3s ease}
+@keyframes toast{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+.tab-active{background:linear-gradient(90deg,#558B2F,#8BC34A)!important;color:#0d1505!important;font-weight:800!important}
+.sub-active{background:rgba(139,195,74,.2)!important;color:#AED581!important;border-color:#8BC34A!important;font-weight:700!important}
+.tgl{position:relative;width:42px;height:22px;border-radius:20px;background:#2e3a1c;cursor:pointer;transition:.2s;flex-shrink:0;display:inline-block}
+.tgl.on{background:#8BC34A}
+.tgl::after{content:'';position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s}
+.tgl.on::after{right:22px}
+::-webkit-scrollbar{width:8px}
+::-webkit-scrollbar-thumb{background:#558B2F;border-radius:8px}
+button,input,select,textarea{font-family:inherit}
+.card{border-radius:14px;padding:18px;margin-bottom:14px}
+.cat-row{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.cat-row .inp{margin-bottom:0;flex:1;min-width:100px}
+.saved-item{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:9px;background:rgba(10,14,6,.7);border:1px solid rgba(139,195,74,.18);margin-bottom:7px;font-size:12.5px;flex-wrap:wrap}
+.saved-item .sec{font-weight:700;color:#AED581;min-width:110px}
+.saved-item .val{color:#cbd5e1;flex:1}
+.badge{padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;display:inline-block}
+.badge-on{background:rgba(139,195,74,.2);color:#AED581}
+.badge-off{background:rgba(107,122,85,.2);color:#6b7a55}
+.cmd-help{background:rgba(139,195,74,.06);border:1px solid rgba(139,195,74,.2);border-radius:9px;padding:12px;margin-bottom:12px;font-size:12px;line-height:1.9}
+.cmd-help code{background:rgba(10,14,6,.9);padding:2px 7px;border-radius:5px;color:#8BC34A;font-family:monospace}
+</style>
+</head>
+<body>
+<div id="toastBox" style="position:fixed;top:16px;left:16px;z-index:9999;display:flex;flex-direction:column;gap:8px;"></div>
+
+<!-- AUTH -->
+<div id="authView" class="fade" style="max-width:400px;margin:50px auto;padding:0 16px;">
+  <div class="glass" style="border-radius:20px;padding:28px;">
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="width:56px;height:56px;margin:0 auto 10px;border-radius:16px;background:linear-gradient(135deg,#558B2F,#8BC34A);display:flex;align-items:center;justify-content:center;font-weight:800;color:#0d1505;font-size:24px;">N</div>
+      <h2 style="font-size:22px;font-weight:800;" class="grad">برايم بلانكلزي</h2>
+      <p style="color:#AED581;font-size:12px;margin-top:4px;">لوحة تحكم البوتات — مجاني غير محدود</p>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:14px;">
+      <button id="tLogin" class="tab-active" onclick="switchAuth('login')" style="flex:1;padding:9px;border-radius:9px;border:1px solid rgba(139,195,74,.3);background:transparent;color:#cbd5e1;font-size:12px;cursor:pointer;font-weight:600;">دخول</button>
+      <button id="tReg" onclick="switchAuth('register')" style="flex:1;padding:9px;border-radius:9px;border:1px solid rgba(139,195,74,.3);background:transparent;color:#cbd5e1;font-size:12px;cursor:pointer;font-weight:600;">حساب جديد</button>
+    </div>
+    <label class="lbl">اسم المستخدم</label>
+    <input id="inpUser" class="inp" placeholder="اسم المستخدم"/>
+    <label class="lbl">كلمة المرور</label>
+    <input id="inpPass" type="password" class="inp" placeholder="كلمة المرور"/>
+    <button class="grad-btn" id="authBtn" onclick="doAuth()" style="width:100%;padding:13px;border-radius:10px;font-size:15px;">دخول فوري</button>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashView" class="fade" style="display:none;max-width:1150px;margin:0 auto;padding:16px;">
+  <div class="glass" style="border-radius:14px;padding:12px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#558B2F,#8BC34A);display:flex;align-items:center;justify-content:center;font-weight:800;color:#0d1505;">N</div>
+      <span style="font-weight:800;font-size:16px;" class="grad">برايم بلانكلزي</span>
+    </div>
+    <div style="margin-right:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <span style="padding:4px 12px;border-radius:20px;background:rgba(139,195,74,.15);color:#AED581;font-size:11px;font-weight:700;">مجاني غير محدود</span>
+      <span id="topUser" style="font-size:12px;color:#AED581;"></span>
+      <button onclick="logout()" style="padding:7px 14px;border-radius:9px;border:1px solid rgba(239,68,68,.4);background:rgba(239,68,68,.1);color:#f87171;font-size:12px;font-weight:600;cursor:pointer;">خروج</button>
+    </div>
+  </div>
+
+  <!-- اختيار البوت والسيرفر -->
+  <div class="glass card">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;flex-wrap:wrap;">
+      <div><label class="lbl">اختر البوت</label><select id="selBot" class="inp" style="margin-bottom:0;" onchange="loadGuilds()"><option value="">-- اختر بوتاً --</option></select></div>
+      <div><label class="lbl">اختر السيرفر</label><select id="selGuild" class="inp" style="margin-bottom:0;" onchange="loadChannelsAndRoles()"><option value="">-- اختر سيرفر --</option></select></div>
+    </div>
+  </div>
+
+  <!-- الأقسام الرئيسية -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:16px;">
+    <button class="tab-active main-tab" data-tab="hosting" onclick="switchTab('hosting')" style="padding:12px;border-radius:10px;border:1px solid rgba(139,195,74,.3);background:rgba(10,14,6,.8);color:#cbd5e1;font-size:13px;cursor:pointer;font-weight:600;">🚀 استضافة البوت</button>
+    <button class="main-tab" data-tab="discord" onclick="switchTab('discord')" style="padding:12px;border-radius:10px;border:1px solid rgba(139,195,74,.3);background:rgba(10,14,6,.8);color:#cbd5e1;font-size:13px;cursor:pointer;font-weight:600;">⚙️ إعدادات الديسكورد</button>
+    <button class="main-tab" data-tab="files" onclick="switchTab('files')" style="padding:12px;border-radius:10px;border:1px solid rgba(139,195,74,.3);background:rgba(10,14,6,.8);color:#cbd5e1;font-size:13px;cursor:pointer;font-weight:600;">📁 الملفات</button>
+  </div>
+
+  <!-- HOSTING -->
+  <div id="tab-hosting" class="tab-content">
+    <div class="glass card">
+      <h3 style="margin:0 0 14px;font-size:16px;color:#AED581;">إضافة بوت جديد (عن طريق التوكن)</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:10px;flex-wrap:wrap;">
+        <input id="botName" class="inp" placeholder="اسم البوت" style="margin-bottom:0;"/>
+        <input id="botToken" type="password" class="inp" placeholder="توكن البوت (Token)" style="margin-bottom:0;font-family:monospace;"/>
+        <button class="grad-btn" onclick="addBot()" style="padding:11px 22px;border-radius:10px;white-space:nowrap;">إضافة وتشغيل</button>
+      </div>
+    </div>
+    <div class="glass card">
+      <h3 style="margin:0 0 14px;font-size:16px;color:#AED581;">بوتاتي</h3>
+      <div id="botsList"><div style="text-align:center;padding:24px;color:#6b7a55;font-size:13px;">لا توجد بوتات.</div></div>
+    </div>
+  </div>
+
+  <!-- DISCORD SETTINGS -->
+  <div id="tab-discord" class="tab-content" style="display:none;">
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
+      <button class="sub-tab" data-s="automod" onclick="switchSub('automod')" style="padding:8px 12px;border-radius:8px;border:1px solid rgba(139,195,74,.3);background:rgba(10,14,6,.8);color:#6b7a55;font-size:12px;cursor:pointer;">🛡️ الحماية</button>
+      <button class="sub-tab sub-active" data-s="tickets" onclick="switchSub('tickets')" style="padding:8px 12px;border-radius:8px;border:1px solid rgba(139,195,74,.3);background:rgba(10,14,6,.8);color:#6b7a55;font-size:12px;cursor:pointer;">🎫 التذاكر</button>
+      <button class="sub-tab" data-s="welcomeleave" onclick="switchSub('welcomeleave')" style="padding:8px 12px;border-radius:8px;border:1px solid rgba(139,195,74,.3);background:rgba(10,14,6,.8);color:#6b7a55;font-size:12px;cursor:pointer;">👋 الترحيب والخروج</button>
+      <button class="sub-tab" data-s="applications" onclick="switchSub('applications')" style="padding:8px 12px;border-radius:8px;border:1px solid rgba(139,195,74,.3);background:rgba(10,14,6,.8);color:#6b7a55;font-size:12px;cursor:pointer;">📋 التقديمات</button>
+      <button class="sub-tab" data-s="levels" onclick="switchSub('levels')" style="padding:8px 12px;border-radius:8px;border:1px solid rgba(139,195,74,.3);background:rgba(10,14,6,.8);color:#6b7a55;font-size:12px;cursor:pointer;">📊 المستويات</button>
+      <button class="sub-tab" data-s="logs" onclick="switchSub('logs')" style="padding:8px 12px;border-radius:8px;border:1px solid rgba(139,195,74,.3);background:rgba(10,14,6,.8);color:#6b7a55;font-size:12px;cursor:pointer;">📋 السجلات</button>
+      <button class="sub-tab" data-s="admin" onclick="switchSub('admin')" style="padding:8px 12px;border-radius:8px;border:1px solid rgba(139,195,74,.3);background:rgba(10,14,6,.8);color:#6b7a55;font-size:12px;cursor:pointer;">⚔️ أوامر إدارية</button>
+      <button class="sub-tab" data-s="reaction" onclick="switchSub('reaction')" style="padding:8px 12px;border-radius:8px;border:1px solid rgba(139,195,74,.3);background:rgba(10,14,6,.8);color:#6b7a55;font-size:12px;cursor:pointer;">🔘 أدوار تفاعلية</button>
+      <button class="sub-tab" data-s="commands" onclick="switchSub('commands')" style="padding:8px 12px;border-radius:8px;border:1px solid rgba(139,195,74,.3);background:rgba(10,14,6,.8);color:#6b7a55;font-size:12px;cursor:pointer;">⌨️ أوامر مخصصة</button>
+      <button class="sub-tab" data-s="embed" onclick="switchSub('embed')" style="padding:8px 12px;border-radius:8px;border:1px solid rgba(139,195,74,.3);background:rgba(10,14,6,.8);color:#6b7a55;font-size:12px;cursor:pointer;">📝 الإيمبد</button>
+      <button class="sub-tab" data-s="autorole" onclick="switchSub('autorole')" style="padding:8px 12px;border-radius:8px;border:1px solid rgba(139,195,74,.3);background:rgba(10,14,6,.8);color:#6b7a55;font-size:12px;cursor:pointer;">🔁 أوتو رول</button>
+      <button class="sub-tab" data-s="autoreply" onclick="switchSub('autoreply')" style="padding:8px 12px;border-radius:8px;border:1px solid rgba(139,195,74,.3);background:rgba(10,14,6,.8);color:#6b7a55;font-size:12px;cursor:pointer;">🤖 ردود تلقائية</button>
+      <button class="sub-tab" data-s="verification" onclick="switchSub('verification')" style="padding:8px 12px;border-radius:8px;border:1px solid rgba(139,195,74,.3);background:rgba(10,14,6,.8);color:#6b7a55;font-size:12px;cursor:pointer;">🔐 التحقق</button>
+      <button class="sub-tab" data-s="warns" onclick="switchSub('warns')" style="padding:8px 12px;border-radius:8px;border:1px solid rgba(139,195,74,.3);background:rgba(10,14,6,.8);color:#6b7a55;font-size:12px;cursor:pointer;">⚠️ التحذيرات</button>
+      <button class="sub-tab" data-s="points" onclick="switchSub('points')" style="padding:8px 12px;border-radius:8px;border:1px solid rgba(139,195,74,.3);background:rgba(10,14,6,.8);color:#6b7a55;font-size:12px;cursor:pointer;">💰 نقاط واقتصاد</button>
+      <button class="sub-tab" data-s="tempvc" onclick="switchSub('tempvc')" style="padding:8px 12px;border-radius:8px;border:1px solid rgba(139,195,74,.3);background:rgba(10,14,6,.8);color:#6b7a55;font-size:12px;cursor:pointer;">🔊 رومات مؤقتة</button>
+      <button class="sub-tab" data-s="stats" onclick="switchSub('stats')" style="padding:8px 12px;border-radius:8px;border:1px solid rgba(139,195,74,.3);background:rgba(10,14,6,.8);color:#6b7a55;font-size:12px;cursor:pointer;">📈 إحصائيات</button>
+      <button class="sub-tab" data-s="suggestions" onclick="switchSub('suggestions')" style="padding:8px 12px;border-radius:8px;border:1px solid rgba(139,195,74,.3);background:rgba(10,14,6,.8);color:#6b7a55;font-size:12px;cursor:pointer;">💡 اقتراحات</button>
+      <button class="sub-tab" data-s="announcements" onclick="switchSub('announcements')" style="padding:8px 12px;border-radius:8px;border:1px solid rgba(139,195,74,.3);background:rgba(10,14,6,.8);color:#6b7a55;font-size:12px;cursor:pointer;">📢 إعلانات</button>
+      <button class="sub-tab" data-s="reminders" onclick="switchSub('reminders')" style="padding:8px 12px;border-radius:8px;border:1px solid rgba(139,195,74,.3);background:rgba(10,14,6,.8);color:#6b7a55;font-size:12px;cursor:pointer;">⏰ تذكيرات</button>
+      <button class="sub-tab" data-s="bannedwords" onclick="switchSub('bannedwords')" style="padding:8px 12px;border-radius:8px;border:1px solid rgba(139,195,74,.3);background:rgba(10,14,6,.8);color:#6b7a55;font-size:12px;cursor:pointer;">🚫 كلمات ممنوعة</button>
+      <button class="sub-tab" data-s="notifyroles" onclick="switchSub('notifyroles')" style="padding:8px 12px;border-radius:8px;border:1px solid rgba(139,195,74,.3);background:rgba(10,14,6,.8);color:#6b7a55;font-size:12px;cursor:pointer;">🔔 ردود إخبارية</button>
+      <button class="sub-tab" data-s="rules" onclick="switchSub('rules')" style="padding:8px 12px;border-radius:8px;border:1px solid rgba(139,195,74,.3);background:rgba(10,14,6,.8);color:#6b7a55;font-size:12px;cursor:pointer;">📜 القوانين</button>
+      <button class="sub-tab" data-s="giveaways" onclick="switchSub('giveaways')" style="padding:8px 12px;border-radius:8px;border:1px solid rgba(139,195,74,.3);background:rgba(10,14,6,.8);color:#6b7a55;font-size:12px;cursor:pointer;">🎁 مسابقات</button>
+      <button class="sub-tab" data-s="copymsgs" onclick="switchSub('copymsgs')" style="padding:8px 12px;border-radius:8px;border:1px solid rgba(139,195,74,.3);background:rgba(10,14,6,.8);color:#6b7a55;font-size:12px;cursor:pointer;">📑 نسخ رسائل</button>
+    </div>
+
+    <!-- ملخص الإعدادات المحفوظة (الرومات تظهر هنا في أي مكان) -->
+    <div id="savedSummary" class="glass card" style="border-color:rgba(139,195,74,.4);">
+      <h4 style="margin:0 0 12px;font-size:15px;color:#AED581;">📌 الإعدادات والرومات المحفوظة لهذا السيرفر</h4>
+      <div style="text-align:center;padding:16px;color:#6b7a55;font-size:12px;">اختر البوت والسيرفر لعرض الرومات المحفوظة هنا.</div>
+    </div>
+
+    <!-- AutoMod -->
+    <div id="sub-automod" class="sub-content glass card" style="display:none;">
+      <h4 style="margin:0 0 12px;font-size:15px;color:#AED581;">🛡️ إعدادات الحماية المتقدمة</h4>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;"><span id="am-enabled" class="tgl on" onclick="this.classList.toggle('on')"></span><span style="font-size:14px;font-weight:700;">تفعيل الحماية الكاملة</span></div>
+
+      <label class="lbl">📢 روم تنبيهات الحماية</label>
+      <select id="am-channel" class="inp ch-select"><option value="">-- اختر روم التنبيهات --</option></select>
+
+      <div style="margin:16px 0 10px;padding:10px;background:rgba(139,195,74,.08);border-radius:8px;border:1px solid rgba(139,195,74,.2);">
+        <div style="font-size:13px;font-weight:700;color:#AED581;margin-bottom:8px;">⭐ الرتب المستثناة (3 رتب — تفعل أي شيء بدون عقاب)</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+          <select id="am-wl1" class="inp role-select"><option value="">رتبة 1</option></select>
+          <select id="am-wl2" class="inp role-select"><option value="">رتبة 2</option></select>
+          <select id="am-wl3" class="inp role-select"><option value="">رتبة 3</option></select>
+        </div>
+      </div>
+
+      <div id="am-protections" style="display:flex;flex-direction:column;gap:10px;">
+
+        <!-- منع الروابط -->
+        <div class="prot-card" style="padding:12px;border-radius:10px;border:1px solid rgba(139,195,74,.2);background:rgba(10,14,6,.5);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span style="font-size:13px;font-weight:700;">🔗 منع الروابط</span>
+            <span id="am-antiLinks-enabled" class="tgl on" onclick="this.classList.toggle('on')"></span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 80px;gap:8px;">
+            <select id="am-antiLinks-pun" class="inp"><option value="mute">كتم</option><option value="kick">طرد</option><option value="ban">حظر</option></select>
+            <input id="am-antiLinks-min" type="number" class="inp" placeholder="دقائق" value="10" min="1"/>
+          </div>
+        </div>
+
+        <!-- منع السبام -->
+        <div class="prot-card" style="padding:12px;border-radius:10px;border:1px solid rgba(139,195,74,.2);background:rgba(10,14,6,.5);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span style="font-size:13px;font-weight:700;">📨 منع السبام والتكرار</span>
+            <span id="am-antiSpam-enabled" class="tgl on" onclick="this.classList.toggle('on')"></span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 80px;gap:8px;">
+            <select id="am-antiSpam-pun" class="inp"><option value="mute">كتم</option><option value="kick">طرد</option><option value="ban">حظر</option></select>
+            <input id="am-antiSpam-min" type="number" class="inp" placeholder="دقائق" value="10" min="1"/>
+          </div>
+        </div>
+
+        <!-- منع السب والكلمات المحظورة -->
+        <div class="prot-card" style="padding:12px;border-radius:10px;border:1px solid rgba(139,195,74,.2);background:rgba(10,14,6,.5);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span style="font-size:13px;font-weight:700;">🤬 منع السب والكلمات المحظورة (تحذف تلقائياً)</span>
+            <span id="am-antiBad-enabled" class="tgl on" onclick="this.classList.toggle('on')"></span>
+          </div>
+          <input id="am-badwords" class="inp" placeholder="الكلمات المحظورة (افصل بينها بفاصلة ،)" style="margin-bottom:8px;"/>
+          <div style="display:grid;grid-template-columns:1fr 80px;gap:8px;">
+            <select id="am-antiBad-pun" class="inp"><option value="mute">كتم</option><option value="kick">طرد</option><option value="ban">حظر</option></select>
+            <input id="am-antiBad-min" type="number" class="inp" placeholder="دقائق" value="10" min="1"/>
+          </div>
+        </div>
+
+        <!-- حماية طرد الأعضاء -->
+        <div class="prot-card" style="padding:12px;border-radius:10px;border:1px solid rgba(239,68,68,.25);background:rgba(40,10,10,.4);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span style="font-size:13px;font-weight:700;">👢 حماية طرد الأعضاء (من يطرد يُعاقب)</span>
+            <span id="am-antiKick-enabled" class="tgl" onclick="this.classList.toggle('on')"></span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 80px;gap:8px;">
+            <select id="am-antiKick-pun" class="inp"><option value="mute">كتم</option><option value="kick">طرد</option><option value="ban" selected>حظر</option></select>
+            <input id="am-antiKick-min" type="number" class="inp" placeholder="دقائق" value="60" min="1"/>
+          </div>
+        </div>
+
+        <!-- حماية دخول البوتات -->
+        <div class="prot-card" style="padding:12px;border-radius:10px;border:1px solid rgba(239,68,68,.25);background:rgba(40,10,10,.4);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span style="font-size:13px;font-weight:700;">🤖 حماية دخول البوتات (يطرد البوت + من أضافه)</span>
+            <span id="am-antiBot-enabled" class="tgl" onclick="this.classList.toggle('on')"></span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 80px;gap:8px;">
+            <select id="am-antiBot-pun" class="inp"><option value="mute">كتم</option><option value="kick">طرد</option><option value="ban" selected>حظر</option></select>
+            <input id="am-antiBot-min" type="number" class="inp" placeholder="دقائق" value="60" min="1"/>
+          </div>
+        </div>
+
+        <!-- حماية التهكير -->
+        <div class="prot-card" style="padding:12px;border-radius:10px;border:1px solid rgba(239,68,68,.35);background:rgba(50,8,8,.5);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span style="font-size:13px;font-weight:700;">🚨 حماية التهكير (حذف جماعي للرومات/الرتب/الحظر)</span>
+            <span id="am-antiNuke-enabled" class="tgl" onclick="this.classList.toggle('on')"></span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 80px 80px;gap:8px;">
+            <select id="am-antiNuke-pun" class="inp"><option value="mute">كتم</option><option value="kick">طرد</option><option value="ban" selected>حظر فوري</option></select>
+            <input id="am-antiNuke-min" type="number" class="inp" placeholder="دقائق" value="60" min="1"/>
+            <input id="am-antiNuke-thr" type="number" class="inp" placeholder="عدد الأحداث" value="3" min="2" max="20"/>
+          </div>
+          <div style="font-size:11px;color:#6b7a55;margin-top:6px;">عندما يقوم شخص بأكثر من (عدد الأحداث) خلال 10 ثوانٍ — يُعاقب فوراً</div>
+        </div>
+
+      </div>
+
+      <button class="grad-btn" onclick="saveAutomod()" style="padding:12px 28px;border-radius:10px;margin-top:14px;width:100%;font-size:14px;font-weight:700;">💾 حفظ إعدادات الحماية</button>
+    </div>
+
+    <!-- Tickets -->
+    <div id="sub-tickets" class="sub-content glass card" style="display:none;">
+      <h4 style="margin:0 0 12px;font-size:15px;color:#AED581;">إنشاء لوحة تذاكر (تعمل فعلياً — خطأ "اللوحة غير موجودة" مُصلح)</h4>
+      <label class="lbl">روم إرسال اللوحة</label><select id="tk-channel" class="inp ch-select"><option value="">-- اختر روم --</option></select>
+      <label class="lbl">قسم فتح التذاكر (الكاتيجوري)</label><select id="tk-category" class="inp cat-select"><option value="">-- بدون قسم (افتراضي) --</option></select>
+      <label class="lbl">عنوان اللوحة</label><input id="tk-title" class="inp" placeholder="نظام التذاكر"/>
+      <label class="lbl">وصف اللوحة</label><textarea id="tk-desc" class="inp" rows="2" placeholder="اختر نوع التذكرة..." style="resize:vertical;"></textarea>
+      <label class="lbl">🏷️ رتبة الدعم (تقدر تستخدم أزرار التذكرة: استلام / اغلاق وحذف / اضافه شخص / ازاله شخص / استدعاء الاداره / استدعاء صاحب التكت)</label><select id="tk-role" class="inp role-select"><option value="">-- صاحب الصلاحية فقط --</option></select>
+      <label class="lbl">شكل لوحة التذاكر</label>
+      <select id="tk-type" class="inp" style="margin-bottom:12px;">
+        <option value="dropdown">قائمة منسدلة (Dropdown)</option>
+        <option value="buttons">أزرار (Buttons) — حتى 5 أنواع</option>
+      </select>
+      <label class="lbl">أدوات الدعم داخل روم التذكرة (استلام / اغلاق وحذف / اضافه شخص / ازاله شخص / استدعاء الاداره / استدعاء صاحب التكت)</label>
+      <select id="tk-tools" class="inp" style="margin-bottom:12px;">
+        <option value="buttons">أزرار (Buttons)</option>
+        <option value="select">قائمة منسدلة (Dropdown)</option>
+        <option value="none">بدون أدوات</option>
+      </select>
+      <label class="lbl">أنواع التذاكر</label>
+      <div id="catList">
+        <div class="cat-row"><input class="inp cat-label" placeholder="الاسم (مثال: دعم فني)"/><input class="inp cat-desc" placeholder="وصف مختصر"/><button onclick="this.parentElement.remove()" style="padding:0 14px;border-radius:8px;border:1px solid rgba(239,68,68,.4);background:transparent;color:#f87171;cursor:pointer;">✕</button></div>
+      </div>
+      <button onclick="addCat()" style="width:100%;padding:9px;border-radius:9px;border:1px dashed rgba(139,195,74,.4);background:transparent;color:#AED581;font-size:12px;cursor:pointer;margin-bottom:12px;">+ إضافة نوع تذكرة آخر</button>
+      <button class="grad-btn" onclick="sendTicketPanel()" style="width:100%;padding:13px;border-radius:10px;font-size:15px;">إرسال اللوحة للسيرفر (فوري)</button>
+      <div id="panelsList" style="margin-top:16px;"></div>
+    </div>
+
+    <!-- Levels -->
+    <!-- Applications / التقديمات -->
+    <!-- الترحيب والخروج -->
+    <div id="sub-welcomeleave" class="sub-content glass card" style="display:none;">
+      <h4 style="margin:0 0 12px;font-size:15px;color:#AED581;">👋 الترحيب والخروج (يعمل فعلياً — رسالة عند الدخول ورسالة عند الخروج)</h4>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;"><span id="wl-enabled" class="tgl on" onclick="this.classList.toggle('on')"></span><span style="font-size:13px;">تفعيل رسائل الترحيب والخروج</span></div>
+      <label class="lbl">📥 روم رسالة الترحيب (عند دخول عضو)</label>
+      <select id="wl-welcome" class="inp ch-select"><option value="">-- اختر روم --</option></select>
+      <label class="lbl">رسالة الترحيب (استخدم {user} و {server} و {memberCount})</label>
+      <textarea id="wl-welcome-msg" class="inp" rows="2" placeholder="مرحباً بك {user} في {server}! — الآن عدد الأعضاء {memberCount}" style="resize:vertical;"></textarea>
+      <label class="lbl">📤 روم رسالة الخروج (عند مغادرة عضو)</label>
+      <select id="wl-leave" class="inp ch-select"><option value="">-- اختر روم --</option></select>
+      <label class="lbl">رسالة الخروج (استخدم {user} و {server} و {memberCount})</label>
+      <textarea id="wl-leave-msg" class="inp" rows="2" placeholder="{user} غادر السيرفر {server} — الآن عدد الأعضاء {memberCount}" style="resize:vertical;"></textarea>
+      <button class="grad-btn" onclick="saveWelcomeLeave()" style="padding:11px 24px;border-radius:10px;">حفظ وتفعيل الترحيب والخروج</button>
+    </div>
+
+    <div id="sub-applications" class="sub-content glass card" style="display:none;">
+      <h4 style="margin:0 0 12px;font-size:15px;color:#AED581;">📋 نظام التقديمات (حد أقصى 10 تقديمات — 15 سؤال لكل تقديم — الأسئلة في الخاص + قبول/رفض)</h4>
+      <div style="background:rgba(139,195,74,.06);padding:10px;border-radius:8px;margin-bottom:12px;font-size:12px;color:#9aa885;">
+        أنشئ تقديماً (مثل: تقديم إداري / تقديم دعم / إلخ) — يظهر في قائمة منسدلة بالديسكورد. عند اختيار العضو للتقديم تصل الأسئلة في <b>خاصه</b>، يمكنه إرفاق صور (تظهر فوق التقديم)، ويصل التقديم كاملاً للروم الذي تحدده مع زرّي <b>قبول</b> و <b>رفض مع سبب</b>، وترسل رسائل القبول/الرفض للعضو في خاصه.
+      </div>
+      <label class="lbl">عنوان التقديم</label>
+      <input id="app-title" class="inp" placeholder="مثال: تقديم إداري"/>
+      <label class="lbl">روم استلام التقديمات</label>
+      <select id="app-channel" class="inp ch-select"><option value="">-- اختر روم --</option></select>
+      <label class="lbl">🏷️ رتبة المراجعة (تقدر تقبل وترفض التقديمات — إن لم تحدد، الإدارة فقط)</label>
+      <select id="app-review-role" class="inp role-select"><option value="">-- إدارة السيرفر فقط --</option></select>
+      <label class="lbl">🎖️ رتبة تُعطى للعضو عند القبول</label>
+      <select id="app-accept-role" class="inp role-select"><option value="">-- بدون رتبة --</option></select>
+      <label class="lbl">⛔ رتبة تُعطى للعضو عند الرفض (اختياري)</label>
+      <select id="app-reject-role" class="inp role-select"><option value="">-- بدون رتبة --</option></select>
+      <label class="lbl">📩 رسالة القبول (تُرسل في الخاص — استخدم {user} و {app} و {server})</label>
+      <textarea id="app-accept-msg" class="inp" rows="2" placeholder="مبروك {user}! تم قبول تقديمك ({app}) في {server}." style="resize:vertical;"></textarea>
+      <label class="lbl">📩 رسالة الرفض (تُرسل في الخاص مع السبب — استخدم {user} و {app} و {server})</label>
+      <textarea id="app-reject-msg" class="inp" rows="2" placeholder="نأسف {user}، تم رفض تقديمك ({app})." style="resize:vertical;"></textarea>
+
+      <div style="margin:14px 0 8px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:13px;font-weight:700;color:#AED581;">الأسئلة (حد أقصى 15 — كل سؤال يُسأل في الخاص)</span>
+        <button onclick="addAppQuestion()" style="padding:6px 14px;border-radius:7px;border:1px solid rgba(139,195,74,.4);background:rgba(139,195,74,.1);color:#AED581;font-size:12px;cursor:pointer;">+ إضافة سؤال</button>
+      </div>
+      <div id="app-questions" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="grad-btn" onclick="saveApplication()" style="padding:10px 20px;border-radius:10px;font-size:13px;">💾 حفظ التقديم</button>
+        <button onclick="sendAppPanel()" style="padding:10px 20px;border-radius:10px;border:1px solid rgba(139,195,74,.5);background:transparent;color:#AED581;font-size:13px;cursor:pointer;">📢 إرسال لوحة التقديمات لروم</button>
+        <button onclick="resetAppForm()" style="padding:10px 20px;border-radius:10px;border:1px solid rgba(107,122,85,.4);background:transparent;color:#9aa885;font-size:13px;cursor:pointer;">🔄 نموذج جديد</button>
+      </div>
+
+      <div style="margin-top:16px;">
+        <div style="font-size:13px;font-weight:700;color:#AED581;margin-bottom:8px;">التقديمات المحفوظة:</div>
+        <div id="app-list"><div style="text-align:center;padding:14px;color:#6b7a55;font-size:12px;">لا توجد تقديمات بعد.</div></div>
+      </div>
+    </div>
+
+    <div id="sub-levels" class="sub-content glass card" style="display:none;">
+      <h4 style="margin:0 0 12px;font-size:15px;color:#AED581;">إعدادات المستويات والنقاط</h4>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;"><span id="lv-enabled" class="tgl on" onclick="this.classList.toggle('on')"></span><span style="font-size:13px;">تفعيل نظام المستويات</span></div>
+      <label class="lbl">روم إعلانات الترقية</label><select id="lv-channel" class="inp ch-select"><option value="">-- اختر روم --</option></select>
+      <label class="lbl">نقاط لكل رسالة</label><input id="lv-points" class="inp" type="number" value="10"/>
+      <label class="lbl">رسالة الترقية (استخدم {user} و {level})</label><textarea id="lv-upmsg" class="inp" rows="2" placeholder="مبروك {user} وصلت للمستوى {level}!" style="resize:vertical;"></textarea>
+      <button class="grad-btn" onclick="saveLevels()" style="padding:11px 24px;border-radius:10px;">حفظ إعدادات المستويات</button>
+    </div>
+
+    <!-- Logs -->
+    <div id="sub-logs" class="sub-content glass card" style="display:none;">
+      <h4 style="margin:0 0 12px;font-size:15px;color:#AED581;">إعدادات السجلات (6 أقسام — كل شي مع ذكر الشخص المنفذ)</h4>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;"><span id="lg-enabled" class="tgl on" onclick="this.classList.toggle('on')"></span><span style="font-size:13px;">تفعيل السجلات</span></div>
+      <label class="lbl">📝 الرسائل — كل الرسائل المحذوفة والمعدلة</label><select id="lg-msg" class="inp ch-select"><option value="">-- اختر روم --</option></select>
+      <label class="lbl">📢 الرومات — إنشاء/حذف/تعديل الرومات</label><select id="lg-channels" class="inp ch-select"><option value="">-- اختر روم --</option></select>
+      <label class="lbl">👤 الأعضاء — تغيير الأسماء والألقاب وإعطاء/سحب الرتب</label><select id="lg-members" class="inp ch-select"><option value="">-- اختر روم --</option></select>
+      <label class="lbl">🎭 رتب وصلاحيات — إنشاء/تعديل/حذف الرتب وصلاحياتها وأسمائها</label><select id="lg-roles" class="inp ch-select"><option value="">-- اختر روم --</option></select>
+      <label class="lbl">🚪 دخول وخروج — دخول وخروج الأعضاء + الرومات الصوتية</label><select id="lg-joinleave" class="inp ch-select"><option value="">-- اختر روم --</option></select>
+      <label class="lbl">🔨 الاشراف — الطرد والحظر/فك الحظر والكتم والمسح والتحذير</label><select id="lg-mod" class="inp ch-select"><option value="">-- اختر روم --</option></select>
+      <button class="grad-btn" onclick="saveLogs()" style="padding:11px 24px;border-radius:10px;margin-top:10px;">حفظ إعدادات السجلات وتفعيلها</button>
+    </div>
+
+    <!-- Admin Commands (25 أمراً منفصلاً) -->
+    <div id="sub-admin" class="sub-content glass card" style="display:none;">
+      <h4 style="margin:0 0 12px;font-size:15px;color:#AED581;">⚔️ الأوامر الإدارية (25 أمراً — كل أمر لحاله واختصاره، بدون بادئات)</h4>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;"><span id="ac-enabled" class="tgl on" onclick="this.classList.toggle('on')"></span><span style="font-size:13px;">تفعيل الأوامر الإدارية</span></div>
+      <div class="cmd-help">
+        <b style="color:#AED581;">طريقة الاستخدام:</b> لكل أمر اختر نوعه واكتب اختصاره، ثم اكتب الاختصار مباشرة في أي روم مع المطلوب (@عضو / رقم / رتبة). مثال: <code>ط @عضو</code> أو <code>مسح 20</code> أو <code>كتم @عضو 30</code>.
+      </div>
+      <label class="lbl">الرتبة الإدارية (من لديه هذه الرتبة يستخدم الأوامر — بالإضافة لصاحب الصلاحية)</label>
+      <select id="ac-role" class="inp role-select"><option value="">-- صاحب الصلاحية فقط --</option></select>
+      <label class="lbl">مدة الكتم الافتراضية بالدقائق (إذا لم تكتب رقم مع الأمر)</label>
+      <input id="ac-mute" class="inp" type="number" value="10"/>
+      <div style="margin:10px 0 6px;font-size:13px;font-weight:700;color:#AED581;">الأوامر (25) — اكتب اختصار كل أمر واختر نوعه (اترك الاختصار فارغاً لتعطيل الأمر):</div>
+      <div id="ac-commands" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;"></div>
+      <button class="grad-btn" onclick="saveAdminCommands()" style="width:100%;padding:13px;border-radius:10px;font-size:15px;">حفظ وتفعيل الأوامر الإدارية</button>
+    </div>
+
+    <!-- Reaction Roles -->
+    <div id="sub-reaction" class="sub-content glass card" style="display:none;">
+      <h4 style="margin:0 0 12px;font-size:15px;color:#AED581;">الأدوار التفاعلية (تعمل فعلياً)</h4>
+      <label class="lbl">روم الرسالة التفاعلية</label><select id="rr-channel" class="inp ch-select"><option value="">-- اختر روم --</option></select>
+      <label class="lbl">الإيموجي (مثال: 🎮 أو ✅)</label><input id="rr-emoji" class="inp" placeholder="🎮" value="✅"/>
+      <label class="lbl">الرتبة الممنوحة</label><select id="rr-role" class="inp role-select"><option value="">-- اختر رتبة --</option></select>
+      <label class="lbl">نص الرسالة</label><textarea id="rr-text" class="inp" rows="2" placeholder="اضغط على الإيموجي لأخذ الرتبة" style="resize:vertical;"></textarea>
+      <button class="grad-btn" onclick="sendReactionRole()" style="padding:11px 24px;border-radius:10px;">إرسال الرسالة وتفعيل الرول التفاعلي</button>
+    </div>
+
+    <!-- Custom Commands -->
+    <div id="sub-commands" class="sub-content glass card" style="display:none;">
+      <h4 style="margin:0 0 12px;font-size:15px;color:#AED581;">الأوامر المخصصة النصية</h4>
+      <label class="lbl">الأمر (مثال: رابط — يعمل مع أو بدون /)</label><input id="cc-trigger" class="inp" placeholder="رابط"/>
+      <label class="lbl">الرد</label><textarea id="cc-reply" class="inp" rows="2" placeholder="رابط سيرفرنا: ..." style="resize:vertical;"></textarea>
+      <button class="grad-btn" onclick="addCustomCommand()" style="width:100%;padding:12px;border-radius:10px;">حفظ الأمر</button>
+      <div id="ccList" style="margin-top:14px;"><div style="text-align:center;padding:16px;color:#6b7a55;font-size:12px;">لا توجد أوامر مخصصة.</div></div>
+    </div>
+
+    <!-- Embed -->
+    <div id="sub-embed" class="sub-content glass card" style="display:none;">
+      <h4 style="margin:0 0 12px;font-size:15px;color:#AED581;">صانع الإيمبد (إرسال فوري)</h4>
+      <label class="lbl">روم الإرسال</label><select id="em-channel" class="inp ch-select"><option value="">-- اختر روم --</option></select>
+      <label class="lbl">نص الرسالة (اختياري)</label><textarea id="em-content" class="inp" rows="2" placeholder="نص عادي قبل الإيمبد..." style="resize:vertical;"></textarea>
+      <label class="lbl">عنوان الإيمبد</label><input id="em-title" class="inp" placeholder="عنوان الإيمبد"/>
+      <label class="lbl">وصف الإيمبد</label><textarea id="em-desc" class="inp" rows="3" placeholder="وصف الإيمبد..." style="resize:vertical;"></textarea>
+      <label class="lbl">لون الإيمبد</label><input id="em-color" class="inp" placeholder="#8BC34A" value="#8BC34A"/>
+      <button class="grad-btn" onclick="sendEmbed()" style="width:100%;padding:13px;border-radius:10px;font-size:15px;">إرسال الآن (فوري)</button>
+    </div>
+
+    <!-- Auto Role -->
+    <div id="sub-autorole" class="sub-content glass card" style="display:none;">
+      <h4 style="margin:0 0 12px;font-size:15px;color:#AED581;">الأوتو رول (رتبة تلقائية عند الدخول — تعمل فعلياً)</h4>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;"><span id="ar-enabled" class="tgl on" onclick="this.classList.toggle('on')"></span><span style="font-size:13px;">تفعيل الرتبة التلقائية</span></div>
+      <label class="lbl">الرتبة الممنوحة عند الدخول</label><select id="ar-role" class="inp role-select"><option value="">-- اختر رتبة --</option></select>
+      <button class="grad-btn" onclick="saveAutorole()" style="padding:11px 24px;border-radius:10px;">حفظ الأوتو رول</button>
+    </div>
+
+    <!-- Auto Reply -->
+    <div id="sub-autoreply" class="sub-content glass card" style="display:none;">
+      <h4 style="margin:0 0 12px;font-size:15px;color:#AED581;">الردود التلقائية</h4>
+      <label class="lbl">الكلمة المفتاحية</label><input id="ar-trigger" class="inp" placeholder="مثال: السلام عليكم"/>
+      <label class="lbl">الرد</label><textarea id="ar-reply" class="inp" rows="2" placeholder="وعليكم السلام!" style="resize:vertical;"></textarea>
+      <button class="grad-btn" onclick="addAutoReply()" style="width:100%;padding:12px;border-radius:10px;">إضافة رد تلقائي</button>
+      <div id="arList" style="margin-top:14px;"><div style="text-align:center;padding:16px;color:#6b7a55;font-size:12px;">لا توجد ردود تلقائية.</div></div>
+    </div>
+  </div>
+
+  <!-- FILES -->
+  <div id="tab-files" class="tab-content" style="display:none;">
+    <div class="glass card">
+      <h3 style="margin:0 0 14px;font-size:16px;color:#AED581;">📦 رفع وتشغيل بوتات بايثون (PY / ZIP)</h3>
+      <div style="font-size:12px;color:#6b7a55;margin-bottom:10px;">ارفع ملف بايثون (.py) أو ملف مضغوط (.zip) يحتوي على <b>main.py</b> — يفك الضغط ويثبّت المكتبات (requirements.txt) ويشغّل البوت تلقائياً ▶</div>
+      <label style="display:block;width:100%;padding:22px;border:2px dashed rgba(139,195,74,.4);border-radius:10px;text-align:center;cursor:pointer;background:rgba(139,195,74,.05);margin-bottom:14px;">
+        <input type="file" style="display:none;" onchange="uploadFile(this.files[0])"/>
+        <span style="color:#AED581;font-weight:600;font-size:13px;">اضغط لرفع ملف (.js / .py / .zip)</span>
+      </label>
+      <div id="filesList"><div style="text-align:center;padding:16px;color:#6b7a55;font-size:12px;">لا توجد ملفات.</div></div>
+    </div>
+  </div>
+</div>
+
+    <div id="sub-verification" class="sub-content glass card" style="display:none;">
+      <h4 style="margin:0 0 12px;font-size:15px;color:#AED581;">🔐 نظام التحقق (رد فعل يعطي رتبة)</h4>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;"><span id="ex-verification-tgl" class="tgl on" onclick="this.classList.toggle('on')"></span><span style="font-size:13px;">تفعيل القسم</span></div>
+      <label class="lbl">روم التحقق</label><select class="inp ch-select ex-inp" data-f="channelId"><option value="">-- اختر روم --</option></select>
+      <label class="lbl">آيدي رسالة التحقق (اختياري — يُنشئ رسالة إن ترك فارغاً)</label><input class="inp ex-inp" data-f="messageId" placeholder="اترك فارغاً لإنشاء رسالة"/>
+      <label class="lbl">الرتبة المعطاة عند التحقق</label><select class="inp role-select ex-inp" data-f="roleId"><option value="">-- اختر رتبة --</option></select>
+      <label class="lbl">الإيموجي (اختياري — افتراضي ✅)</label><input class="inp ex-inp" data-f="emoji" placeholder="✅"/>
+      <button class="grad-btn" onclick="saveExtra('verification')" style="padding:11px 24px;border-radius:10px;">💾 حفظ الإعدادات</button>
+    </div>
+    <div id="sub-warns" class="sub-content glass card" style="display:none;">
+      <h4 style="margin:0 0 12px;font-size:15px;color:#AED581;">⚠️ نظام التحذيرات (مع إجراء تلقائي)</h4>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;"><span id="ex-warns-tgl" class="tgl on" onclick="this.classList.toggle('on')"></span><span style="font-size:13px;">تفعيل القسم</span></div>
+      <label class="lbl">روم سجل التحذيرات</label><select class="inp ch-select ex-inp" data-f="logChannelId"><option value="">-- اختر روم --</option></select>
+      <label class="lbl">حد التحذيرات قبل الإجراء التلقائي</label><input class="inp ex-inp" type="number" data-f="limit" value="3"/>
+      <label class="lbl">الإجراء عند الوصول للحد</label><select class="inp ex-inp" data-f="action"><option>كتم</option><option>طرد</option><option selected>حظر</option></select>
+      <label class="lbl">مدة الكتم بالدقائق (إن كان الإجراء كتم)</label><input class="inp ex-inp" type="number" data-f="muteMin" value="60"/>
+      <button class="grad-btn" onclick="saveExtra('warns')" style="padding:11px 24px;border-radius:10px;">💾 حفظ الإعدادات</button>
+    </div>
+    <div id="sub-points" class="sub-content glass card" style="display:none;">
+      <h4 style="margin:0 0 12px;font-size:15px;color:#AED581;">💰 نظام النقاط والاقتصاد (مع لوحة المتصدرين)</h4>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;"><span id="ex-points-tgl" class="tgl on" onclick="this.classList.toggle('on')"></span><span style="font-size:13px;">تفعيل القسم</span></div>
+      <label class="lbl">نقاط لكل رسالة</label><input class="inp ex-inp" type="number" data-f="perMsg" value="1"/>
+      <label class="lbl">نقاط لكل دقيقة صوت</label><input class="inp ex-inp" type="number" data-f="perVoiceMin" value="2"/>
+      <label class="lbl">روم لوحة المتصدرين (تحديث تلقائي)</label><select class="inp ch-select ex-inp" data-f="boardChannelId"><option value="">-- اختر روم --</option></select>
+      <label class="lbl">مكافآت الرتب (اكتب: المستوى=آيدي_الرتبة، كل سطر واحد)</label><textarea class="inp ex-inp" rows="3" data-f="roleRewards" placeholder="5=123...&#10;10=456..." style="resize:vertical;"></textarea>
+      <button class="grad-btn" onclick="saveExtra('points')" style="padding:11px 24px;border-radius:10px;">💾 حفظ الإعدادات</button>
+    </div>
+    <div id="sub-tempvc" class="sub-content glass card" style="display:none;">
+      <h4 style="margin:0 0 12px;font-size:15px;color:#AED581;">🔊 الرومات المؤقتة (ينشئ روم خاص عند الانضمام)</h4>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;"><span id="ex-tempvc-tgl" class="tgl on" onclick="this.classList.toggle('on')"></span><span style="font-size:13px;">تفعيل القسم</span></div>
+      <label class="lbl">روم الانضمام (لما يدخله الشخص ينشأ له روم)</label><select class="inp ch-select ex-inp" data-f="joinChannelId"><option value="">-- اختر روم صوتي --</option></select>
+      <label class="lbl">قسم إنشاء الرومات المؤقتة</label><select class="inp ch-select ex-inp" data-f="categoryId"><option value="">-- اختر قسم --</option></select>
+      <label class="lbl">حد الأعضاء في الروم المؤقت</label><input class="inp ex-inp" type="number" data-f="userLimit" value="5"/>
+      <button class="grad-btn" onclick="saveExtra('tempvc')" style="padding:11px 24px;border-radius:10px;">💾 حفظ الإعدادات</button>
+    </div>
+    <div id="sub-stats" class="sub-content glass card" style="display:none;">
+      <h4 style="margin:0 0 12px;font-size:15px;color:#AED581;">📈 إحصائيات السيرفر (رومات عداد تتحدث تلقائياً)</h4>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;"><span id="ex-stats-tgl" class="tgl on" onclick="this.classList.toggle('on')"></span><span style="font-size:13px;">تفعيل القسم</span></div>
+      <label class="lbl">روم عداد عدد الأعضاء</label><select class="inp ch-select ex-inp" data-f="membersChannelId"><option value="">-- اختر روم صوتي --</option></select>
+      <label class="lbl">روم عداد الأعضاء المتصلين</label><select class="inp ch-select ex-inp" data-f="onlineChannelId"><option value="">-- اختر روم صوتي --</option></select>
+      <label class="lbl">روم عداد عدد البوتات</label><select class="inp ch-select ex-inp" data-f="botsChannelId"><option value="">-- اختر روم صوتي --</option></select>
+      <label class="lbl">مدة التحديث بالدقائق</label><input class="inp ex-inp" type="number" data-f="intervalMin" value="10"/>
+      <button class="grad-btn" onclick="saveExtra('stats')" style="padding:11px 24px;border-radius:10px;">💾 حفظ الإعدادات</button>
+    </div>
+    <div id="sub-suggestions" class="sub-content glass card" style="display:none;">
+      <h4 style="margin:0 0 12px;font-size:15px;color:#AED581;">💡 اقتراحات الأعضاء (موافق/غير موافق + قبول)</h4>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;"><span id="ex-suggestions-tgl" class="tgl on" onclick="this.classList.toggle('on')"></span><span style="font-size:13px;">تفعيل القسم</span></div>
+      <label class="lbl">روم الاقتراحات</label><select class="inp ch-select ex-inp" data-f="channelId"><option value="">-- اختر روم --</option></select>
+      <label class="lbl">روم الاقتراحات المقبولة</label><select class="inp ch-select ex-inp" data-f="approvedChannelId"><option value="">-- اختر روم --</option></select>
+      <label class="lbl">إيموجي الموافقة</label><input class="inp ex-inp" data-f="yesEmoji" value="✅"/>
+      <label class="lbl">إيموجي الرفض</label><input class="inp ex-inp" data-f="noEmoji" value="❌"/>
+      <button class="grad-btn" onclick="saveExtra('suggestions')" style="padding:11px 24px;border-radius:10px;">💾 حفظ الإعدادات</button>
+    </div>
+    <div id="sub-announcements" class="sub-content glass card" style="display:none;">
+      <h4 style="margin:0 0 12px;font-size:15px;color:#AED581;">📢 نظام الإعلانات (إرسال وتثبيت)</h4>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;"><span id="ex-announcements-tgl" class="tgl on" onclick="this.classList.toggle('on')"></span><span style="font-size:13px;">تفعيل القسم</span></div>
+      <label class="lbl">روم الإعلانات</label><select class="inp ch-select ex-inp" data-f="channelId"><option value="">-- اختر روم --</option></select>
+      <label class="lbl">الرتبة المذكورة (اختياري)</label><select class="inp role-select ex-inp" data-f="mentionRoleId"><option value="">-- بدون منشن --</option></select>
+      <label class="lbl">نص الإعلان</label><textarea class="inp ex-inp" rows="3" data-f="text" placeholder="اكتب الإعلان هنا..." style="resize:vertical;"></textarea>
+      <button class="blue-btn" onclick="sendExtra('announcements')" style="padding:9px 18px;border-radius:9px;margin-bottom:10px;">📤 إرسال الإعلان الآن</button>
+      <button class="grad-btn" onclick="saveExtra('announcements')" style="padding:11px 24px;border-radius:10px;">💾 حفظ الإعدادات</button>
+    </div>
+    <div id="sub-reminders" class="sub-content glass card" style="display:none;">
+      <h4 style="margin:0 0 12px;font-size:15px;color:#AED581;">⏰ التذكيرات التلقائية</h4>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;"><span id="ex-reminders-tgl" class="tgl on" onclick="this.classList.toggle('on')"></span><span style="font-size:13px;">تفعيل القسم</span></div>
+      <label class="lbl">روم التذكير</label><select class="inp ch-select ex-inp" data-f="channelId"><option value="">-- اختر روم --</option></select>
+      <label class="lbl">مدة التكرار بالساعات</label><input class="inp ex-inp" type="number" data-f="intervalHours" value="24"/>
+      <label class="lbl">رسالة التذكير</label><textarea class="inp ex-inp" rows="2" data-f="message" placeholder="لا تنسوا تفعيل التنبيهات!" style="resize:vertical;"></textarea>
+      <button class="grad-btn" onclick="saveExtra('reminders')" style="padding:11px 24px;border-radius:10px;">💾 حفظ الإعدادات</button>
+    </div>
+    <div id="sub-bannedwords" class="sub-content glass card" style="display:none;">
+      <h4 style="margin:0 0 12px;font-size:15px;color:#AED581;">🚫 الكلمات الممنوعة (حذف تلقائي + إجراء)</h4>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;"><span id="ex-bannedwords-tgl" class="tgl on" onclick="this.classList.toggle('on')"></span><span style="font-size:13px;">تفعيل القسم</span></div>
+      <label class="lbl">الكلمات الممنوعة (افصل بفاصلة)</label><textarea class="inp ex-inp" rows="2" data-f="words" placeholder="كلمة1, كلمة2, كلمة3" style="resize:vertical;"></textarea>
+      <label class="lbl">الإجراء عند كتابة كلمة ممنوعة</label><select class="inp ex-inp" data-f="action"><option selected>حذف الرسالة فقط</option><option>حذف + تحذير</option><option>حذف + كتم</option><option>حذف + طرد</option></select>
+      <label class="lbl">مدة الكتم بالدقائق</label><input class="inp ex-inp" type="number" data-f="muteMin" value="10"/>
+      <button class="grad-btn" onclick="saveExtra('bannedwords')" style="padding:11px 24px;border-radius:10px;">💾 حفظ الإعدادات</button>
+    </div>
+    <div id="sub-notifyroles" class="sub-content glass card" style="display:none;">
+      <h4 style="margin:0 0 12px;font-size:15px;color:#AED581;">🔔 ردود فعل إخبارية (تفاعل = متابعة إعلانات)</h4>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;"><span id="ex-notifyroles-tgl" class="tgl on" onclick="this.classList.toggle('on')"></span><span style="font-size:13px;">تفعيل القسم</span></div>
+      <label class="lbl">روم الرسالة</label><select class="inp ch-select ex-inp" data-f="channelId"><option value="">-- اختر روم --</option></select>
+      <label class="lbl">آيدي الرسالة (اختياري)</label><input class="inp ex-inp" data-f="messageId" placeholder="اترك فارغاً لإنشاء رسالة"/>
+      <label class="lbl">الرتبة المعطاة عند التفاعل</label><select class="inp role-select ex-inp" data-f="roleId"><option value="">-- اختر رتبة --</option></select>
+      <label class="lbl">الإيموجي</label><input class="inp ex-inp" data-f="emoji" value="🔔"/>
+      <button class="grad-btn" onclick="saveExtra('notifyroles')" style="padding:11px 24px;border-radius:10px;">💾 حفظ الإعدادات</button>
+    </div>
+    <div id="sub-rules" class="sub-content glass card" style="display:none;">
+      <h4 style="margin:0 0 12px;font-size:15px;color:#AED581;">📜 قائمة القوانين (إرسال كامل)</h4>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;"><span id="ex-rules-tgl" class="tgl on" onclick="this.classList.toggle('on')"></span><span style="font-size:13px;">تفعيل القسم</span></div>
+      <label class="lbl">روم عرض القوانين</label><select class="inp ch-select ex-inp" data-f="channelId"><option value="">-- اختر روم --</option></select>
+      <label class="lbl">عنوان رسالة القوانين</label><input class="inp ex-inp" data-f="title" value="قوانين السيرفر"/>
+      <label class="lbl">نص القوانين (كل سطر بند)</label><textarea class="inp ex-inp" rows="5" data-f="text" placeholder="1- ...&#10;2- ..." style="resize:vertical;"></textarea>
+      <button class="blue-btn" onclick="sendExtra('rules')" style="padding:9px 18px;border-radius:9px;margin-bottom:10px;">📤 إرسال القوانين الآن</button>
+      <button class="grad-btn" onclick="saveExtra('rules')" style="padding:11px 24px;border-radius:10px;">💾 حفظ الإعدادات</button>
+    </div>
+    <div id="sub-giveaways" class="sub-content glass card" style="display:none;">
+      <h4 style="margin:0 0 12px;font-size:15px;color:#AED581;">🎁 فعاليات ومسابقات (سحب عشوائي)</h4>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;"><span id="ex-giveaways-tgl" class="tgl on" onclick="this.classList.toggle('on')"></span><span style="font-size:13px;">تفعيل القسم</span></div>
+      <label class="lbl">روم المسابقة</label><select class="inp ch-select ex-inp" data-f="channelId"><option value="">-- اختر روم --</option></select>
+      <label class="lbl">الجائزة</label><input class="inp ex-inp" data-f="prize" placeholder="مثال: نيترو شهر"/>
+      <label class="lbl">مدة المسابقة بالساعات</label><input class="inp ex-inp" type="number" data-f="durationHours" value="24"/>
+      <label class="lbl">عدد الفائزين</label><input class="inp ex-inp" type="number" data-f="winners" value="1"/>
+      <button class="blue-btn" onclick="sendExtra('giveaways')" style="padding:9px 18px;border-radius:9px;margin-bottom:10px;">📤 بدء المسابقة الآن</button>
+      <button class="grad-btn" onclick="saveExtra('giveaways')" style="padding:11px 24px;border-radius:10px;">💾 حفظ الإعدادات</button>
+    </div>
+    <div id="sub-copymsgs" class="sub-content glass card" style="display:none;">
+      <h4 style="margin:0 0 12px;font-size:15px;color:#AED581;">📑 نسخ الرسائل (من روم لآخر)</h4>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;"><span id="ex-copymsgs-tgl" class="tgl on" onclick="this.classList.toggle('on')"></span><span style="font-size:13px;">تفعيل القسم</span></div>
+      <label class="lbl">روم المصدر (يُنسخ منه)</label><select class="inp ch-select ex-inp" data-f="sourceChannelId"><option value="">-- اختر روم --</option></select>
+      <label class="lbl">روم الهدف (يُنسخ إليه)</label><select class="inp ch-select ex-inp" data-f="targetChannelId"><option value="">-- اختر روم --</option></select>
+      <label class="lbl">عدد الرسائل المراد نسخها (أحدثها)</label><input class="inp ex-inp" type="number" data-f="limit" value="50"/>
+      <button class="blue-btn" onclick="sendExtra('copymsgs')" style="padding:9px 18px;border-radius:9px;margin-bottom:10px;">📤 ابدأ النسخ الآن</button>
+      <button class="grad-btn" onclick="saveExtra('copymsgs')" style="padding:11px 24px;border-radius:10px;">💾 حفظ الإعدادات</button>
+    </div>
+
+    <script>
+var authMode='login', curUser=null, _lastConfig=null;
+var _chMap={}, _roleMap={}, _catMap={};
+
+function toast(msg,color){color=color||'#8BC34A';var b=document.getElementById('toastBox'),t=document.createElement('div');t.className='toast';t.style.cssText='background:rgba(10,14,6,.95);border:1px solid '+color+';color:#e8f0d8;padding:11px 16px;border-radius:9px;font-size:12px;max-width:280px;';t.textContent=msg;b.appendChild(t);setTimeout(function(){t.style.opacity='0';t.style.transition='.4s';setTimeout(function(){t.remove();},400);},3500);}
+function switchAuth(m){authMode=m;document.getElementById('tLogin').classList.toggle('tab-active',m==='login');document.getElementById('tReg').classList.toggle('tab-active',m==='register');document.getElementById('authBtn').textContent=m==='login'?'دخول فوري':'إنشاء حساب ودخول';}
+async function doAuth(){var u=document.getElementById('inpUser').value.trim(),p=document.getElementById('inpPass').value;if(!u||!p){toast('املأ جميع الحقول','#f59e0b');return;}var url=authMode==='login'?'/api/login':'/api/register';var r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});var d=await r.json();if(d.success){curUser={username:u};enterDash();}else toast(d.message,'#ef4444');}
+async function logout(){await fetch('/api/logout');location.reload();}
+function enterDash(){document.getElementById('authView').style.display='none';document.getElementById('dashView').style.display='block';document.getElementById('topUser').textContent=curUser.username;loadBots();loadFiles();}
+function switchTab(t){document.querySelectorAll('.main-tab').forEach(function(b){b.classList.toggle('tab-active',b.dataset.tab===t);});document.querySelectorAll('.tab-content').forEach(function(c){c.style.display='none';});document.getElementById('tab-'+t).style.display='block';if(t==='discord'){loadAutoReplies();loadCustomCommands();}}
+function saveExtra(key){var bid=getBotId();if(!bid){toast('اختر البوت أولاً','#f59e0b');return;}var data={};var el=document.getElementById('sub-'+key);el.querySelectorAll('.ex-inp').forEach(function(i){data[i.dataset.f]=i.value||'';});data.enabled=document.getElementById('ex-'+key+'-tgl').classList.contains('on');fetch('/api/bots/extra/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({botId:bid,guildId:getGuildId(),key:key,data:data})}).then(function(r){return r.json();}).then(function(d){if(d.success)toast('✓ تم حفظ إعدادات القسم','#8BC34A');else toast(d.message||'خطأ','#ef4444');});}
+function sendExtra(key){var bid=getBotId();if(!bid){toast('اختر البوت أولاً','#f59e0b');return;}saveExtra(key);fetch('/api/bots/extra/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({botId:bid,guildId:getGuildId(),key:key})}).then(function(r){return r.json();}).then(function(d){if(d.success)toast('✓ '+d.message,'#8BC34A');else toast(d.message||'خطأ','#ef4444');});}
+function switchSub(s){document.querySelectorAll('.sub-tab').forEach(function(b){b.classList.toggle('sub-active',b.dataset.s===s);});document.querySelectorAll('.sub-content').forEach(function(c){c.style.display='none';});var el=document.getElementById('sub-'+s);if(el)el.style.display='block';}
+function getBotId(){return document.getElementById('selBot').value;}
+function getGuildId(){return document.getElementById('selGuild').value;}
+function tglOn(id){var e=document.getElementById(id);return e?e.classList.contains('on'):true;}
+function setTgl(id,on){var e=document.getElementById(id);if(e)e.classList.toggle('on',!!on);}
+function setSel(id,val){var e=document.getElementById(id);if(e&&val){for(var i=0;i<e.options.length;i++){if(e.options[i].value===String(val)){e.value=String(val);return;}}}}
+function chName(id){return id?(_chMap[id]||('#'+id)):'غير محدد';}
+function roleName(id){return id?(_roleMap[id]||('رتبة '+id)):'غير محدد';}
+function catName(id){return id?(_catMap[id]||('قسم '+id)):'بدون قسم';}
+function sameGuild(g){return !g||String(g)===String(getGuildId());}
+
+async function loadBots(){var r=await fetch('/api/user');var d=await r.json();if(!d.loggedIn)return;curUser=d.user;var opts=d.bots.map(function(b){return '<option value="'+b.id+'">'+b.name+'</option>';}).join('');document.getElementById('selBot').innerHTML='<option value="">-- اختر بوتاً --</option>'+opts;var bl=document.getElementById('botsList');if(!d.bots.length){bl.innerHTML='<div style="text-align:center;padding:24px;color:#6b7a55;font-size:13px;">لا توجد بوتات — أضف أول بوت لك.</div>';}else{bl.innerHTML=d.bots.map(function(b){return '<div style="display:flex;align-items:center;gap:10px;padding:14px;border-radius:10px;background:rgba(10,14,6,.8);border:1px solid rgba(139,195,74,.2);margin-bottom:10px;flex-wrap:wrap;"><span class="'+(b.running?'pulse':'')+'" style="width:10px;height:10px;border-radius:50%;background:'+(b.running?'#8BC34A':'#6b7a55')+';display:inline-block;"></span><div style="flex:1;min-width:120px;"><div style="font-weight:700;font-size:14px;">'+b.name+'</div><div style="font-size:11px;color:#6b7a55;">'+(b.running?'يعمل الآن':'متوقف')+'</div></div>'+(b.running?'<button onclick="stopBot('+b.id+')" style="padding:7px 16px;border-radius:8px;border:none;background:#ef4444;color:#fff;font-weight:700;font-size:12px;cursor:pointer;">إيقاف</button>':'<button onclick="startBot('+b.id+')" style="padding:7px 16px;border-radius:8px;border:none;background:#8BC34A;color:#0d1505;font-weight:700;font-size:12px;cursor:pointer;">تشغيل</button>')+'<button onclick="delBot('+b.id+')" style="padding:7px 12px;border-radius:8px;border:1px solid rgba(239,68,68,.4);background:transparent;color:#f87171;font-size:12px;cursor:pointer;">حذف</button></div>';}).join('');}}
+async function addBot(){var n=document.getElementById('botName').value.trim(),t=document.getElementById('botToken').value.trim();if(!n||!t){toast('املأ الاسم والتوكن','#f59e0b');return;}var r=await fetch('/api/bots/add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:n,token:t})});var d=await r.json();if(d.success){document.getElementById('botName').value='';document.getElementById('botToken').value='';toast('تمت الإضافة — جاري التشغيل...','#8BC34A');loadBots();}else toast(d.message,'#ef4444');}
+async function startBot(id){toast('جاري التشغيل...','#AED581');var r=await fetch('/api/bots/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id})});var d=await r.json();if(d.success){toast('تم تشغيل البوت: '+d.tag,'#8BC34A');loadBots();}else toast(d.message,'#ef4444');}
+async function stopBot(id){await fetch('/api/bots/stop',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id})});toast('تم الإيقاف','#f59e0b');loadBots();}
+async function delBot(id){await fetch('/api/bots/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id})});toast('تم الحذف','#ef4444');loadBots();}
+
+async function loadGuilds(){var bid=getBotId();_chMap={};_roleMap={};_catMap={};if(!bid){document.getElementById('selGuild').innerHTML='<option value="">-- اختر سيرفر --</option>';resetSelects();renderSummary(null);return;}var r=await fetch('/api/bots/guilds?botId='+bid);var d=await r.json();document.getElementById('selGuild').innerHTML='<option value="">-- اختر سيرفر --</option>'+d.guilds.map(function(g){return '<option value="'+g.id+'">'+g.name+' ('+g.memberCount+')</option>';}).join('');resetSelects();renderSummary(null);}
+function resetSelects(){document.querySelectorAll('.ch-select').forEach(function(s){s.innerHTML='<option value="">-- اختر روم --</option>';});document.querySelectorAll('.role-select').forEach(function(s){s.innerHTML='<option value="">-- اختر رتبة --</option>';});document.querySelectorAll('.cat-select').forEach(function(s){s.innerHTML='<option value="">-- بدون قسم (افتراضي) --</option>';});}
+
+async function loadChannelsAndRoles(){var bid=getBotId(),gid=getGuildId();if(!bid||!gid){renderSummary(null);return;}var rc=await fetch('/api/bots/channels?botId='+bid+'&guildId='+gid);var dc=await rc.json();var copts=dc.channels.map(function(c){_chMap[c.id]=c.name;return '<option value="'+c.id+'">'+c.name+'</option>';}).join('');document.querySelectorAll('.ch-select').forEach(function(s){s.innerHTML='<option value="">-- اختر روم --</option>'+copts;});var rr=await fetch('/api/bots/roles?botId='+bid+'&guildId='+gid);var dr=await rr.json();var ropts=dr.roles.map(function(r){_roleMap[r.id]=r.name;return '<option value="'+r.id+'">'+r.name+'</option>';}).join('');document.querySelectorAll('.role-select').forEach(function(s){s.innerHTML='<option value="">-- صاحب الصلاحية فقط / لا توجد --</option>'+ropts;});var rcat=await fetch('/api/bots/categories?botId='+bid+'&guildId='+gid);var dcat=await rcat.json();var catopts=dcat.categories.map(function(c){_catMap[c.id]=c.name;return '<option value="'+c.id+'">'+c.name+'</option>';}).join('');document.querySelectorAll('.cat-select').forEach(function(s){s.innerHTML='<option value="">-- بدون قسم (افتراضي) --</option>'+catopts;});await loadConfig();}
+
+// ===== تحميل الإعدادات المحفوظة واستعادة الرومات =====
+async function loadConfig(){var bid=getBotId();if(!bid){renderSummary(null);return;}var r=await fetch('/api/bots/config?botId='+bid);var d=await r.json();if(!d.success){renderSummary(null);return;}var c=d.config;_lastConfig=c;
+  // السجلات
+  if(c.logs&&sameGuild(c.logs.guildId)){setTgl('lg-enabled',c.logs.enabled!==false);var ch=c.logs.channels||{};setSel('lg-msg',ch.msg);setSel('lg-channels',ch.channels||ch.ch);setSel('lg-members',ch.members||ch.user);setSel('lg-roles',ch.roles||ch.role);setSel('lg-joinleave',ch.joinleave||ch.join);setSel('lg-mod',ch.mod||ch.ban);}
+  // الترحيب والخروج
+  if(c.welcomeLeave&&sameGuild(c.welcomeLeave.guildId)){setTgl('wl-enabled',c.welcomeLeave.enabled!==false);setSel('wl-welcome',c.welcomeLeave.welcomeChannelId);document.getElementById('wl-welcome-msg').value=c.welcomeLeave.welcomeMessage||'';setSel('wl-leave',c.welcomeLeave.leaveChannelId);document.getElementById('wl-leave-msg').value=c.welcomeLeave.leaveMessage||'';}
+  // الأوامر الإدارية (25)
+  if(c.adminCommands&&sameGuild(c.adminCommands.guildId)){setTgl('ac-enabled',c.adminCommands.enabled!==false);setSel('ac-role',c.adminCommands.adminRoleId);if(c.adminCommands.muteMinutes)document.getElementById('ac-mute').value=c.adminCommands.muteMinutes;var acCmds=c.adminCommands.commands||[];if(!acCmds.length&&c.adminCommands.shortcuts){var oldMap={kick:'kick',ban:'ban',unban:'unban',mute:'mute',unmute:'unmute',purge:'purge',addrole:'addrole',removerole:'removerole'};for(var ok in c.adminCommands.shortcuts){(c.adminCommands.shortcuts[ok]||[]).forEach(function(s){if(s&&String(s).trim())acCmds.push({action:oldMap[ok]||'kick',shortcut:String(s).trim()});});}}renderAdminSlots(acCmds);}else renderAdminSlots(AC_DEFAULTS);
+  // الحماية
+  // الحماية — دعم التنسيق القديم والجديد
+  if(c.automod&&sameGuild(c.automod.guildId)){
+    setTgl('am-enabled',!!c.automod.enabled);
+    setSel('am-channel',c.automod.alertChannelId);
+    var wl=c.automod.whitelistRoles||[];
+    setSel('am-wl1',wl[0]);setSel('am-wl2',wl[1]);setSel('am-wl3',wl[2]);
+    function loadProt(pre,p){if(!p){setTgl(pre+'-enabled',false);return;}setTgl(pre+'-enabled',!!p.enabled);if(p.punishment){var e=document.getElementById(pre+'-pun');if(e)e.value=p.punishment;}var m=document.getElementById(pre+'-min');if(m&&p.muteMinutes)m.value=p.muteMinutes;}
+    // ترقية تلقائية للتنسيق القديم
+    if(typeof c.automod.antiLinks==='boolean'){
+      setTgl('am-antiLinks-enabled',!!c.automod.antiLinks);
+      setTgl('am-antiSpam-enabled',!!c.automod.antiSpam);
+      setTgl('am-antiBad-enabled',!!c.automod.antiBadWords);
+      if(c.automod.badWords)document.getElementById('am-badwords').value=c.automod.badWords.join(', ');
+      ['am-antiLinks-pun','am-antiSpam-pun','am-antiBad-pun'].forEach(function(id){var e=document.getElementById(id);if(e&&c.automod.punishment)e.value=c.automod.punishment;});
+    } else {
+      loadProt('am-antiLinks',c.automod.antiLinks);
+      loadProt('am-antiSpam',c.automod.antiSpam);
+      loadProt('am-antiBad',c.automod.antiBadWords);
+      if(c.automod.antiBadWords&&c.automod.antiBadWords.badWords)document.getElementById('am-badwords').value=c.automod.antiBadWords.badWords.join(', ');
+      loadProt('am-antiKick',c.automod.antiKick);
+      loadProt('am-antiBot',c.automod.antiBotJoin);
+      var nu=c.automod.antiNuke;if(nu){setTgl('am-antiNuke-enabled',!!nu.enabled);var np=document.getElementById('am-antiNuke-pun');if(np&&nu.punishment)np.value=nu.punishment;var nm=document.getElementById('am-antiNuke-min');if(nm&&nu.muteMinutes)nm.value=nu.muteMinutes;var nt=document.getElementById('am-antiNuke-thr');if(nt&&nu.threshold)nt.value=nu.threshold;}
+    }
+  }
+  // المستويات
+  if(c.levels&&sameGuild(c.levels.guildId)){setTgl('lv-enabled',!!c.levels.enabled);setSel('lv-channel',c.levels.channelId);if(c.levels.pointsPerMsg)document.getElementById('lv-points').value=c.levels.pointsPerMsg;if(c.levels.upMsg)document.getElementById('lv-upmsg').value=c.levels.upMsg;}
+  // الأوتو رول
+  if(c.autorole&&sameGuild(c.autorole.guildId)){setTgl('ar-enabled',!!c.autorole.enabled);setSel('ar-role',c.autorole.roleId);}
+  renderPanels(c.ticketPanels||[]);
+  loadApplications();
+  if(!document.getElementById('app-questions').children.length){addAppQuestion();addAppQuestion();addAppQuestion();}
+  renderSummary(c);
+}
+
+// ===== ملخص الإعدادات المحفوظة =====
+function renderSummary(c){var el=document.getElementById('savedSummary');if(!c){el.innerHTML='<h4 style="margin:0 0 12px;font-size:15px;color:#AED581;">📌 الإعدادات والرومات المحفوظة لهذا السيرفر</h4><div style="text-align:center;padding:16px;color:#6b7a55;font-size:12px;">اختر البوت والسيرفر لعرض الرومات المحفوظة هنا.</div>';return;}
+  var items=[];
+  var on=function(b){return b?'<span class="badge badge-on">مفعّل</span>':'<span class="badge badge-off">متوقف</span>';};
+  if(c.welcomeLeave&&sameGuild(c.welcomeLeave.guildId))items.push('<div class="saved-item"><span class="sec">👋 الترحيب والخروج</span><span class="val">ترحيب: '+chName(c.welcomeLeave.welcomeChannelId)+' | خروج: '+chName(c.welcomeLeave.leaveChannelId)+'</span>'+on(c.welcomeLeave.enabled!==false)+'</div>');
+  var tps=(c.ticketPanels||[]).filter(function(p){return sameGuild(p.guildId);});
+  if(tps.length)items.push('<div class="saved-item"><span class="sec">🎫 التذاكر</span><span class="val">'+tps.length+' لوحة — آخرها: "'+(tps[tps.length-1].title||'بدون عنوان')+'" في '+chName(tps[tps.length-1].channelId)+' | القسم: '+catName(tps[tps.length-1].categoryId)+'</span><span class="badge badge-on">شغالة</span></div>');
+  var aps=(c.applications||[]).filter(function(a){return sameGuild(a.guildId);});
+  if(aps.length)items.push('<div class="saved-item"><span class="sec">📋 التقديمات</span><span class="val">'+aps.length+' تقديم — آخرها: "'+(aps[aps.length-1].title||'بدون عنوان')+'" | روم الاستلام: '+chName(aps[aps.length-1].channelId)+'</span><span class="badge badge-on">شغالة</span></div>');
+  if(c.logs&&sameGuild(c.logs.guildId)){var ch=c.logs.channels||{};var active=Object.keys(ch).filter(function(k){return ch[k];}).length;items.push('<div class="saved-item"><span class="sec">📋 السجلات</span><span class="val">'+active+' أنواع مفعّلة — الرسائل:'+chName(ch.msg)+' | الدخول:'+chName(ch.join)+' | الحظر:'+chName(ch.ban)+'</span>'+on(c.logs.enabled!==false)+'</div>');}
+  if(c.automod&&sameGuild(c.automod.guildId)){var activeP=[];function chk(n,p){if(p&&p.enabled)activeP.push(n);}if(typeof c.automod.antiLinks==='boolean'){if(c.automod.antiLinks)activeP.push('روابط');if(c.automod.antiSpam)activeP.push('سبام');if(c.automod.antiBadWords)activeP.push('كلمات محظورة');}else{chk('روابط',c.automod.antiLinks);chk('سبام',c.automod.antiSpam);chk('كلمات محظورة',c.automod.antiBadWords);chk('منع الطرد',c.automod.antiKick);chk('منع البوتات',c.automod.antiBotJoin);chk('مضاد التهكير',c.automod.antiNuke);}items.push('<div class="saved-item"><span class="sec">🛡️ الحماية</span><span class="val">'+(activeP.length?activeP.join('، '):'معطّلة')+' | روم التنبيه: '+chName(c.automod.alertChannelId)+'</span>'+on(!!c.automod.enabled)+'</div>');}
+  if(c.levels&&sameGuild(c.levels.guildId))items.push('<div class="saved-item"><span class="sec">📊 المستويات</span><span class="val">روم الترقية: '+chName(c.levels.channelId)+' | النقاط/رسالة: '+(c.levels.pointsPerMsg||10)+'</span>'+on(!!c.levels.enabled)+'</div>');
+  if(c.adminCommands&&sameGuild(c.adminCommands.guildId)){var sc=c.adminCommands.shortcuts||{};var n=0;for(var k in sc)n+=(sc[k]||[]).length;items.push('<div class="saved-item"><span class="sec">⚔️ أوامر إدارية</span><span class="val">'+n+' اختصار — الرتبة: '+roleName(c.adminCommands.adminRoleId)+' | كتم: '+(c.adminCommands.muteMinutes||10)+'د</span>'+on(!!c.adminCommands.enabled)+'</div>');}
+  if(c.autorole&&sameGuild(c.autorole.guildId))items.push('<div class="saved-item"><span class="sec">🔁 أوتو رول</span><span class="val">الرتبة: '+roleName(c.autorole.roleId)+'</span>'+on(!!c.autorole.enabled)+'</div>');
+  var rr=(c.reactionRoles||[]).filter(function(r){return sameGuild(r.guildId);});if(rr.length)items.push('<div class="saved-item"><span class="sec">🔘 أدوار تفاعلية</span><span class="val">'+rr.length+' رسالة تفاعلية مفعّلة</span><span class="badge badge-on">شغالة</span></div>');
+  var cc=(c.customCommands||[]).filter(function(x){return sameGuild(x.guildId);});if(cc.length)items.push('<div class="saved-item"><span class="sec">⌨️ أوامر مخصصة</span><span class="val">'+cc.length+' أمر — أولها: "'+(cc[0].trigger||'')+'"</span><span class="badge badge-on">شغالة</span></div>');
+  var ar=(c.autoReplies||[]).filter(function(x){return sameGuild(x.guildId);});if(ar.length)items.push('<div class="saved-item"><span class="sec">🤖 ردود تلقائية</span><span class="val">'+ar.length+' رد مفعّل</span><span class="badge badge-on">شغالة</span></div>');
+  el.innerHTML='<h4 style="margin:0 0 12px;font-size:15px;color:#AED581;">📌 الإعدادات والرومات المحفوظة لهذا السيرفر</h4>'+(items.length?items.join(''):'<div style="text-align:center;padding:16px;color:#6b7a55;font-size:12px;">لا توجد إعدادات محفوظة لهذا السيرفر بعد — اضبط أي قسم وسيظهر هنا تلقائياً.</div>');
+}
+
+// ===== قائمة لوحات التذاكر المحفوظة =====
+function renderPanels(panels){var el=document.getElementById('panelsList');var mine=panels.filter(function(p){return sameGuild(p.guildId);});if(!mine.length){el.innerHTML='';return;}
+  el.innerHTML='<h4 style="margin:16px 0 10px;font-size:14px;color:#AED581;">🗂️ لوحات التذاكر المحفوظة ('+mine.length+') — الروم والقسم يظلان محفوظين</h4>'+mine.map(function(p){return '<div style="padding:12px;border-radius:10px;background:rgba(10,14,6,.8);border:1px solid rgba(139,195,74,.2);margin-bottom:8px;font-size:12.5px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><div style="flex:1;min-width:200px;"><div style="font-weight:700;color:#AED581;">'+(p.title||'بدون عنوان')+'</div><div style="color:#cbd5e1;margin-top:4px;">📤 روم الإرسال: <b>'+chName(p.channelId)+'</b> | 📁 القسم: <b>'+catName(p.categoryId)+'</b> | 🏷️ الرتبة: <b>'+roleName(p.mentionRoleId)+'</b> | النوع: '+(p.panelType==='buttons'?'أزرار':'قائمة')+' | الأنواع: '+(p.categories?p.categories.length:0)+' | أدوات الدعم: '+(p.ticketTools==='select'?'قائمة منسدلة':p.ticketTools==='none'?'بدون':'أزرار')+'</div></div><button onclick="deletePanel(\''+p.id+'\')" style="padding:6px 12px;border-radius:8px;border:1px solid rgba(239,68,68,.4);background:transparent;color:#f87171;font-size:11px;cursor:pointer;">حذف</button></div>';}).join('');}
+async function deletePanel(pid){var r=await fetch('/api/bots/ticket-panel/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({botId:getBotId(),panelId:pid})});var d=await r.json();if(d.success){toast('تم حذف اللوحة من الإعدادات','#f59e0b');loadConfig();}else toast(d.message,'#ef4444');}
+
+function addCat(){var div=document.createElement('div');div.className='cat-row';div.innerHTML='<input class="inp cat-label" placeholder="الاسم (مثال: شكوى)"/><input class="inp cat-desc" placeholder="وصف مختصر"/><button onclick="this.parentElement.remove()" style="padding:0 14px;border-radius:8px;border:1px solid rgba(239,68,68,.4);background:transparent;color:#f87171;cursor:pointer;">✕</button>';document.getElementById('catList').appendChild(div);}
+async function sendTicketPanel(){var bid=getBotId();if(!bid){toast('اختر البوت أولاً','#f59e0b');return;}var ch=document.getElementById('tk-channel').value;if(!ch){toast('اختر روم الإرسال','#f59e0b');return;}var cats=[];document.querySelectorAll('#catList .cat-row').forEach(function(row){var l=row.querySelector('.cat-label').value.trim(),d=row.querySelector('.cat-desc').value.trim();if(l)cats.push({label:l,desc:d||l});});if(!cats.length){toast('أضف نوع تذكرة واحد على الأقل','#f59e0b');return;}var r=await fetch('/api/bots/ticket-panel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({botId:bid,guildId:getGuildId(),channelId:ch,title:document.getElementById('tk-title').value,description:document.getElementById('tk-desc').value,categories:cats,mentionRoleId:document.getElementById('tk-role').value,panelType:document.getElementById('tk-type').value,ticketTools:document.getElementById('tk-tools').value,categoryId:document.getElementById('tk-category').value})});var d=await r.json();if(d.success){toast('تم إرسال لوحة التذاكر ✅ والآن فتح التذكرة يعمل 100%','#8BC34A');loadConfig();}else toast(d.message,'#ef4444');}
+
+async function sendEmbed(){var bid=getBotId();if(!bid){toast('اختر البوت أولاً','#f59e0b');return;}var ch=document.getElementById('em-channel').value;if(!ch){toast('اختر روم الإرسال','#f59e0b');return;}var embed=null;if(document.getElementById('em-title').value||document.getElementById('em-desc').value)embed={title:document.getElementById('em-title').value,description:document.getElementById('em-desc').value,color:document.getElementById('em-color').value};var r=await fetch('/api/bots/send-message',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({botId:bid,channelId:ch,content:document.getElementById('em-content').value,embed:embed})});var d=await r.json();if(d.success)toast('تم الإرسال بنجاح ✅','#8BC34A');else toast(d.message,'#ef4444');}
+
+
+async function saveLogs(){var bid=getBotId();if(!bid){toast('اختر البوت أولاً','#f59e0b');return;}var r=await fetch('/api/bots/logs/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({botId:bid,guildId:getGuildId(),enabled:tglOn('lg-enabled'),msg:document.getElementById('lg-msg').value,channels:document.getElementById('lg-channels').value,members:document.getElementById('lg-members').value,roles:document.getElementById('lg-roles').value,joinleave:document.getElementById('lg-joinleave').value,mod:document.getElementById('lg-mod').value})});var d=await r.json();if(d.success){toast('تم تفعيل السجلات ✅ — 6 أقسام وكل حدث يذكر من نفذه','#8BC34A');loadConfig();}else toast(d.message,'#ef4444');}
+
+var ADMIN_ACTIONS = [
+  {v:'kick',l:'طرد عضو'},{v:'ban',l:'حظر عضو'},{v:'unban',l:'فك حظر (بالآيدي)'},
+  {v:'mute',l:'كتم عضو'},{v:'unmute',l:'فك كتم'},{v:'purge',l:'مسح رسائل'},
+  {v:'addrole',l:'إعطاء رتبة'},{v:'removerole',l:'سحب رتبة'},{v:'lock',l:'قفل روم (منع الكتابة)'},
+  {v:'unlock',l:'فتح روم'},{v:'slowmode',l:'وضع بطيء (ثواني)'},{v:'nick',l:'تغيير لقب عضو'},
+  {v:'warn',l:'تحذير عضو'},{v:'rename',l:'تغيير اسم الروم'},{v:'hide',l:'إخفاء الروم'},{v:'unhide',l:'إظهار الروم'}
+];
+var AC_DEFAULTS = [
+  {action:'kick',shortcut:'ط'},{action:'ban',shortcut:'ب'},{action:'unban',shortcut:'بط'},
+  {action:'mute',shortcut:'س'},{action:'unmute',shortcut:'فك كتم'},{action:'purge',shortcut:'مسح'},
+  {action:'addrole',shortcut:'رتبه'},{action:'removerole',shortcut:'نزع رول'}
+];
+function renderAdminSlots(commands){
+  var cont = document.getElementById('ac-commands'); if(!cont) return;
+  var list = (commands && commands.length) ? commands.slice(0,25) : AC_DEFAULTS;
+  while(list.length < 25) list.push({action:'kick',shortcut:''});
+  cont.innerHTML = list.map(function(c,i){
+    var opts = ADMIN_ACTIONS.map(function(a){ return '<option value="'+a.v+'"'+(a.v===c.action?' selected':'')+'>'+a.l+'</option>'; }).join('');
+    return '<div style="display:flex;gap:6px;align-items:center;"><span style="color:#6b7a55;font-size:11px;min-width:22px;">'+(i+1)+'</span><select class="inp ac-action" style="margin-bottom:0;flex:1.2;">'+opts+'</select><input class="inp ac-shortcut" style="margin-bottom:0;flex:1;" placeholder="الاختصار" value="'+(c.shortcut||'').replace(/"/g,'&quot;')+'"/></div>';
+  }).join('');
+}
+async function saveAdminCommands(){var bid=getBotId();if(!bid){toast('اختر البوت أولاً','#f59e0b');return;}var commands=[];document.querySelectorAll('#ac-commands .ac-action').forEach(function(sel,i){var inp=document.querySelectorAll('#ac-commands .ac-shortcut')[i];var sc=(inp?inp.value:'').trim();if(sc)commands.push({action:sel.value,shortcut:sc,enabled:true});});var r=await fetch('/api/bots/admin-commands/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({botId:bid,guildId:getGuildId(),enabled:tglOn('ac-enabled'),adminRoleId:document.getElementById('ac-role').value,muteMinutes:document.getElementById('ac-mute').value,commands:commands})});var d=await r.json();if(d.success){toast('تم حفظ '+commands.length+' أمراً إدارياً ✅','#8BC34A');loadConfig();}else toast(d.message,'#ef4444');}
+async function saveWelcomeLeave(){var bid=getBotId();if(!bid){toast('اختر البوت أولاً','#f59e0b');return;}var r=await fetch('/api/bots/welcome-leave/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({botId:bid,guildId:getGuildId(),enabled:tglOn('wl-enabled'),welcomeChannelId:document.getElementById('wl-welcome').value,welcomeMessage:document.getElementById('wl-welcome-msg').value,leaveChannelId:document.getElementById('wl-leave').value,leaveMessage:document.getElementById('wl-leave-msg').value})});var d=await r.json();if(d.success){toast('تم تفعيل الترحيب والخروج ✅','#8BC34A');loadConfig();}else toast(d.message,'#ef4444');}
+
+async function saveAutorole(){var bid=getBotId();if(!bid){toast('اختر البوت أولاً','#f59e0b');return;}var r=await fetch('/api/bots/autorole/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({botId:bid,guildId:getGuildId(),enabled:tglOn('ar-enabled'),roleId:document.getElementById('ar-role').value})});var d=await r.json();if(d.success){toast('تم حفظ الأوتو رول ✅','#8BC34A');loadConfig();}else toast(d.message,'#ef4444');}
+
+async function sendReactionRole(){var bid=getBotId();if(!bid){toast('اختر البوت أولاً','#f59e0b');return;}var ch=document.getElementById('rr-channel').value,role=document.getElementById('rr-role').value;if(!ch||!role){toast('اختر الروم والرتبة','#f59e0b');return;}var r=await fetch('/api/bots/reaction-role',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({botId:bid,guildId:getGuildId(),channelId:ch,roleId:role,emoji:document.getElementById('rr-emoji').value.trim()||'✅',text:document.getElementById('rr-text').value})});var d=await r.json();if(d.success){toast('تم إرسال الرسالة التفاعلية ✅','#8BC34A');loadConfig();}else toast(d.message,'#ef4444');}
+
+async function addCustomCommand(){var bid=getBotId();if(!bid){toast('اختر البوت أولاً','#f59e0b');return;}var t=document.getElementById('cc-trigger').value.trim(),rpl=document.getElementById('cc-reply').value.trim();if(!t||!rpl){toast('املأ الحقلين','#f59e0b');return;}var r=await fetch('/api/bots/custom-command',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({botId:bid,guildId:getGuildId(),trigger:t,reply:rpl})});var d=await r.json();if(d.success){document.getElementById('cc-trigger').value='';document.getElementById('cc-reply').value='';toast('تمت الإضافة ✅','#8BC34A');renderCC(d.list);loadConfig();}else toast('فشل الإضافة','#ef4444');}
+async function loadCustomCommands(){var bid=getBotId();if(!bid)return;var r=await fetch('/api/bots/custom-commands?botId='+bid);var d=await r.json();renderCC(d.list);}
+function renderCC(list){var el=document.getElementById('ccList');if(!list||!list.length){el.innerHTML='<div style="text-align:center;padding:16px;color:#6b7a55;font-size:12px;">لا توجد أوامر مخصصة.</div>';return;}el.innerHTML=list.map(function(a){return '<div style="padding:10px;border-radius:8px;background:rgba(10,14,6,.8);margin-bottom:8px;font-size:12px;"><div style="color:#AED581;font-weight:700;">الأمر: '+a.trigger+'</div><div style="color:#cbd5e1;margin-top:4px;">الرد: '+a.reply+'</div></div>';}).join('');}
+
+async function saveAutomod(){var bid=getBotId();if(!bid){toast('اختر البوت أولاً','#f59e0b');return;}function prot(pre){return{enabled:tglOn(pre+'-enabled'),punishment:document.getElementById(pre+'-pun').value,muteMinutes:parseInt(document.getElementById(pre+'-min').value)||10};}var body={botId:bid,guildId:getGuildId(),enabled:tglOn('am-enabled'),alertChannelId:document.getElementById('am-channel').value,whitelistRole1:document.getElementById('am-wl1').value,whitelistRole2:document.getElementById('am-wl2').value,whitelistRole3:document.getElementById('am-wl3').value,antiLinks:prot('am-antiLinks'),antiSpam:prot('am-antiSpam'),antiBadWords:{enabled:tglOn('am-antiBad-enabled'),badWords:document.getElementById('am-badwords').value,punishment:document.getElementById('am-antiBad-pun').value,muteMinutes:parseInt(document.getElementById('am-antiBad-min').value)||10},antiKick:prot('am-antiKick'),antiBotJoin:prot('am-antiBot'),antiNuke:{enabled:tglOn('am-antiNuke-enabled'),punishment:document.getElementById('am-antiNuke-pun').value,muteMinutes:parseInt(document.getElementById('am-antiNuke-min').value)||10,threshold:parseInt(document.getElementById('am-antiNuke-thr').value)||3}};var r=await fetch('/api/bots/automod/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});var d=await r.json();if(d.success){toast('تم حفظ الحماية المتقدمة ✅','#8BC34A');loadConfig();}else toast(d.message,'#ef4444');}
+
+async function saveLevels(){var bid=getBotId();if(!bid){toast('اختر البوت أولاً','#f59e0b');return;}var r=await fetch('/api/bots/levels/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({botId:bid,guildId:getGuildId(),enabled:tglOn('lv-enabled'),channelId:document.getElementById('lv-channel').value,pointsPerMsg:document.getElementById('lv-points').value,upMsg:document.getElementById('lv-upmsg').value})});var d=await r.json();if(d.success){toast('تم حفظ المستويات ✅','#8BC34A');loadConfig();}else toast(d.message,'#ef4444');}
+
+async function addAutoReply(){var bid=getBotId();if(!bid){toast('اختر البوت أولاً','#f59e0b');return;}var t=document.getElementById('ar-trigger').value.trim(),rpl=document.getElementById('ar-reply').value.trim();if(!t||!rpl){toast('املأ الحقلين','#f59e0b');return;}var r=await fetch('/api/bots/autoreply',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({botId:bid,guildId:getGuildId(),trigger:t,reply:rpl})});var d=await r.json();if(d.success){document.getElementById('ar-trigger').value='';document.getElementById('ar-reply').value='';toast('تمت الإضافة ✅','#8BC34A');renderAR(d.list);loadConfig();}else toast('فشل الإضافة','#ef4444');}
+async function loadAutoReplies(){var bid=getBotId();if(!bid)return;var r=await fetch('/api/bots/autoreply?botId='+bid);var d=await r.json();renderAR(d.list);}
+function renderAR(list){var el=document.getElementById('arList');if(!list||!list.length){el.innerHTML='<div style="text-align:center;padding:16px;color:#6b7a55;font-size:12px;">لا توجد ردود تلقائية.</div>';return;}el.innerHTML=list.map(function(a){return '<div style="padding:10px;border-radius:8px;background:rgba(10,14,6,.8);margin-bottom:8px;font-size:12px;"><div style="color:#AED581;font-weight:700;">إذا قال: '+a.trigger+'</div><div style="color:#cbd5e1;margin-top:4px;">الرد: '+a.reply+'</div></div>';}).join('');}
+
+async function uploadFile(file){if(!file)return;var fd=new FormData();fd.append('file',file);var r=await fetch('/api/upload',{method:'POST',body:fd});var d=await r.json();if(d.success){toast('تم رفع '+d.filename);loadFiles();}else toast('فشل الرفع','#ef4444');}
+async function loadFiles(){var r=await fetch('/api/files');var d=await r.json();var el=document.getElementById('filesList');if(!d.files.length){el.innerHTML='<div style="text-align:center;padding:16px;color:#6b7a55;font-size:12px;">لا توجد ملفات. ارفع ملف بوت مضغوط (.zip) لتشغيله مباشرة.</div>';}else{el.innerHTML=d.files.map(function(f){var runBtn=f.running?'<button onclick="stopFile('+f.id+')" style="padding:5px 12px;border-radius:6px;border:none;background:#ef4444;color:#fff;font-size:11px;cursor:pointer;font-weight:700;">⏹ إيقاف</button>':'<button onclick="runFile('+f.id+')" style="padding:5px 12px;border-radius:6px;border:none;background:linear-gradient(90deg,#558B2F,#8BC34A);color:#0d1505;font-size:11px;cursor:pointer;font-weight:700;">▶ تشغيل</button>';var statusBadge=f.running?'<span style="padding:2px 8px;border-radius:10px;background:rgba(139,195,74,.2);color:#AED581;font-size:10px;font-weight:700;">🟢 يعمل</span>':'';return '<div style="display:flex;align-items:center;gap:8px;padding:10px;border-radius:8px;background:rgba(10,14,6,.8);margin-bottom:8px;font-size:13px;border:1px solid '+(f.running?'rgba(139,195,74,.4)':'rgba(139,195,74,.15)')+';"><span style="color:#AED581;">📦</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+f.filename+'</span>'+statusBadge+'<span style="color:#6b7a55;font-size:11px;">'+f.size+'</span>'+runBtn+'<button onclick="deleteFile('+f.id+')" style="padding:5px 10px;border-radius:6px;border:1px solid rgba(239,68,68,.4);background:transparent;color:#ef4444;font-size:11px;cursor:pointer;">🗑</button></div>';}).join('');}}
+async function runFile(id){var r=await fetch('/api/files/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id})});var d=await r.json();if(d.success){toast(d.message,'#8BC34A');}else toast(d.message||'فشل التشغيل','#ef4444');setTimeout(loadFiles,1500);}
+async function stopFile(id){var r=await fetch('/api/files/stop',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id})});var d=await r.json();if(d.success){toast('تم إيقاف البوت ✅','#8BC34A');}else toast(d.message||'فشل الإيقاف','#ef4444');setTimeout(loadFiles,800);}
+async function deleteFile(id){if(!confirm('هل أنت متأكد من حذف هذا الملف؟'))return;var r=await fetch('/api/files/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id})});var d=await r.json();if(d.success){toast('تم الحذف ✅','#8BC34A');loadFiles();}else toast('فشل الحذف','#ef4444');}
+
+// ===== التقديمات =====
+var _editingAppId=null;
+function addAppQuestion(qText,qType,qOpts){
+  var cont=document.getElementById('app-questions');
+  if(cont.children.length>=15){toast('حد الأسئلة 15 فقط','#f59e0b');return;}
+  var n=cont.children.length+1;
+  var row=document.createElement('div');
+  row.style.cssText='display:flex;gap:6px;align-items:center;padding:8px;border-radius:8px;background:rgba(10,14,6,.6);border:1px solid rgba(139,195,74,.15);';
+  row.innerHTML='<span style="color:#AED581;font-size:12px;font-weight:700;min-width:22px;">'+n+'</span>'+
+    '<input class="inp app-q-text" placeholder="نص السؤال" style="flex:1;padding:7px 10px;font-size:12px;" value="'+(qText||'')+'"/>'+
+    '<select class="inp app-q-type" style="width:90px;padding:7px;font-size:12px;cursor:pointer;"><option value="text">نص</option><option value="select">قائمة</option></select>'+
+    '<input class="inp app-q-opts" placeholder="خيارات (افصل ب,)" style="width:140px;padding:7px 10px;font-size:11px;display:'+(qType==='select'?'block':'none')+';"/>'+
+    '<button onclick="this.parentElement.remove();renumAppQuestions();" style="padding:6px 9px;border-radius:6px;border:1px solid rgba(239,68,68,.4);background:transparent;color:#ef4444;font-size:12px;cursor:pointer;">✕</button>';
+  cont.appendChild(row);
+  var typeSel=row.querySelector('.app-q-type');
+  var optsInp=row.querySelector('.app-q-opts');
+  typeSel.addEventListener('change',function(){optsInp.style.display=this.value==='select'?'block':'none';});
+  if(qType)typeSel.value=qType;
+  if(qOpts)optsInp.value=qOpts;
+}
+function renumAppQuestions(){var rows=document.getElementById('app-questions').children;for(var i=0;i<rows.length;i++){rows[i].querySelector('span').textContent=i+1;}}
+function resetAppForm(){_editingAppId=null;document.getElementById('app-title').value='';document.getElementById('app-accept-msg').value='';document.getElementById('app-reject-msg').value='';setSel('app-review-role','');setSel('app-accept-role','');setSel('app-reject-role','');document.getElementById('app-questions').innerHTML='';addAppQuestion();addAppQuestion();addAppQuestion();loadApplications();}
+function getAppQuestions(){var rows=document.getElementById('app-questions').children;var qs=[];for(var i=0;i<rows.length;i++){var t=rows[i].querySelector('.app-q-text').value.trim();if(t){qs.push({text:t,type:rows[i].querySelector('.app-q-type').value,options:rows[i].querySelector('.app-q-opts').value});}}return qs;}
+async function saveApplication(){var bid=getBotId();if(!bid){toast('اختر البوت أولاً','#f59e0b');return;}var title=document.getElementById('app-title').value.trim();if(!title){toast('اكتب عنوان التقديم','#f59e0b');return;}var qs=getAppQuestions();if(!qs.length){toast('أضف سؤالاً واحداً على الأقل','#f59e0b');return;}var body={botId:bid,guildId:getGuildId(),title:title,channelId:document.getElementById('app-channel').value,questions:qs,reviewRoleId:document.getElementById('app-review-role').value,acceptRoleId:document.getElementById('app-accept-role').value,rejectRoleId:document.getElementById('app-reject-role').value,acceptMessage:document.getElementById('app-accept-msg').value,rejectMessage:document.getElementById('app-reject-msg').value};if(_editingAppId)body.id=_editingAppId;var r=await fetch('/api/bots/applications/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});var d=await r.json();if(d.success){toast('تم حفظ التقديم ✅','#8BC34A');resetAppForm();}else toast(d.message||'فشل الحفظ','#ef4444');}
+async function deleteApplication(id){if(!confirm('حذف هذا التقديم؟'))return;var bid=getBotId();var r=await fetch('/api/bots/applications/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({botId:bid,appId:id})});var d=await r.json();if(d.success){toast('تم الحذف ✅','#8BC34A');loadApplications();}else toast('فشل الحذف','#ef4444');}
+function editApplication(id){var cfg=_lastConfig;if(!cfg||!cfg.applications)return;var app=cfg.applications.find(function(a){return String(a.id)===String(id);});if(!app)return;_editingAppId=app.id;document.getElementById('app-title').value=app.title;setSel('app-channel',app.channelId);setSel('app-review-role',app.reviewRoleId);setSel('app-accept-role',app.acceptRoleId);setSel('app-reject-role',app.rejectRoleId);document.getElementById('app-accept-msg').value=app.acceptMessage||'';document.getElementById('app-reject-msg').value=app.rejectMessage||'';document.getElementById('app-questions').innerHTML='';(app.questions||[]).forEach(function(q){addAppQuestion(q.text,q.type,(q.options||[]).join(', '));});toast('تم تحميل التقديم للتعديل','#AED581');switchSub('applications');}
+async function sendAppPanel(){var bid=getBotId();if(!bid){toast('اختر البوت أولاً','#f59e0b');return;}var ch=prompt('اكتب آيدي الروم لإرسال لوحة التقديمات إليه:');if(!ch){toast('ألغيت الإرسال','#f59e0b');return;}var r=await fetch('/api/bots/applications/sendPanel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({botId:bid,guildId:getGuildId(),channelId:ch.trim()})});var d=await r.json();if(d.success){toast('تم إرسال اللوحة ✅','#8BC34A');}else toast(d.message||'فشل الإرسال','#ef4444');}
+async function loadApplications(){var cfg=_lastConfig;var list=document.getElementById('app-list');if(!cfg||!cfg.applications||!cfg.applications.length){list.innerHTML='<div style="text-align:center;padding:14px;color:#6b7a55;font-size:12px;">لا توجد تقديمات بعد.</div>';return;}var gid=getGuildId();var apps=cfg.applications.filter(function(a){return !a.guildId||String(a.guildId)===String(gid);});if(!apps.length){list.innerHTML='<div style="text-align:center;padding:14px;color:#6b7a55;font-size:12px;">لا توجد تقديمات لهذا السيرفر.</div>';return;}list.innerHTML=apps.map(function(a){return '<div style="display:flex;align-items:center;gap:8px;padding:9px;border-radius:8px;background:rgba(10,14,6,.8);margin-bottom:6px;border:1px solid rgba(139,195,74,.2);font-size:12px;"><span style="color:#AED581;">📋</span><span style="flex:1;font-weight:700;">'+a.title+'</span><span style="color:#6b7a55;font-size:11px;">'+(a.questions?a.questions.length:0)+' أسئلة | المراجعة: '+(a.reviewRoleId?roleName(a.reviewRoleId):'الإدارة فقط')+'</span><button onclick="editApplication('+a.id+')" style="padding:4px 10px;border-radius:6px;border:1px solid rgba(139,195,74,.4);background:transparent;color:#AED581;font-size:11px;cursor:pointer;">تعديل</button><button onclick="deleteApplication('+a.id+')" style="padding:4px 10px;border-radius:6px;border:1px solid rgba(239,68,68,.4);background:transparent;color:#ef4444;font-size:11px;cursor:pointer;">حذف</button></div>';}).join('');}
+
+(async function(){var r=await fetch('/api/user');var d=await r.json();if(d.loggedIn){curUser=d.user;enterDash();}})();
+</script>
+</body>
+</html>

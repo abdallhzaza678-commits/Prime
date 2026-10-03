@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>الدعم الفني — Prime</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Tahoma,Arial,sans-serif}
+body{background:linear-gradient(135deg,#558B2F,#33691E);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.container{width:100%;max-width:480px}
+.card{background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3);display:flex;flex-direction:column;height:85vh;max-height:700px}
+.header{background:linear-gradient(135deg,#558B2F,#8BC34A);color:#fff;padding:20px;display:flex;align-items:center;gap:14px}
+.avatar{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.header h2{font-size:18px}.status{font-size:12px;opacity:.9;margin-top:2px;display:flex;align-items:center;gap:6px}
+.dot{width:8px;height:8px;background:#4ade80;border-radius:50%;display:inline-block}
+.cats{flex:1;overflow-y:auto;padding:24px 20px}
+.cat-title{font-size:15px;font-weight:700;color:#475569;margin-bottom:16px;text-align:center}
+.cat-item{display:flex;align-items:center;gap:14px;padding:16px;background:#f8fafc;border:2px solid #e2e8f0;border-radius:14px;margin-bottom:12px;cursor:pointer;transition:.2s}
+.cat-item:hover{border-color:#8BC34A;background:#f1f8e9;transform:translateY(-2px)}
+.cat-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.cat-icon.red{background:#fee2e2}.cat-icon.blue{background:#dbeafe}.cat-icon.green{background:#dcfce7}
+.cat-info{flex:1}.cat-name{font-size:15px;font-weight:700;color:#1e293b;margin-bottom:3px}.cat-desc{font-size:12px;color:#64748b;line-height:1.5}
+.cat-arrow{color:#94a3b8;font-size:20px;font-weight:700}
+.back-btn{background:rgba(255,255,255,.2);color:#fff;border:none;width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer;margin-left:8px;flex-shrink:0}
+.msgs{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px;background:#f8fafc}
+.msg{display:flex;gap:10px;max-width:85%}
+.msg.bot{align-self:flex-start}.msg.user{align-self:flex-end;flex-direction:row-reverse}
+.msg-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+.msg-av.bot{background:#16a34a}.msg-av.user{background:#64748b}
+.msg-text{padding:10px 16px;border-radius:14px;font-size:14px;line-height:1.5;word-break:break-word}
+.msg-text.bot{background:#dcfce7;color:#166534;border-top-right-radius:4px}
+.msg-text.user{background:#558B2F;color:#fff;border-top-left-radius:4px}
+.input-area{display:flex;gap:10px;padding:16px;border-top:1px solid #f1f5f9;background:#fff}
+.input-area input{flex:1;padding:12px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px}
+.input-area input:focus{outline:none;border-color:#8BC34A}
+.send-btn{background:linear-gradient(90deg,#558B2F,#8BC34A);color:#0d1505;border:none;padding:12px 24px;border-radius:10px;font-weight:700;cursor:pointer}
+.footer{padding:12px;text-align:center;font-size:12px;color:#64748b;background:#f8fafc}
+.footer a{color:#558B2F;font-weight:600;text-decoration:none}
+.form-area{padding:24px 20px;flex:1;overflow-y:auto}
+.form-area label{display:block;font-size:13px;font-weight:600;color:#475569;margin-bottom:6px}
+.form-area input,.form-area textarea{width:100%;padding:12px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px;margin-bottom:14px;font-family:inherit}
+.form-area input:focus,.form-area textarea:focus{outline:none;border-color:#8BC34A}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="card">
+    <div id="catScreen" style="display:flex;flex-direction:column;height:100%">
+      <div class="header">
+        <div class="avatar">💬</div>
+        <div><h2>مركز الدعم الفني</h2><p class="status"><span class="dot"></span> متصل الآن</p></div>
+      </div>
+      <div class="cats">
+        <div class="cat-title">اختر نوع التذكرة:</div>
+        <div class="cat-item" onclick="selectCat('problem')">
+          <div class="cat-icon red">🔧</div>
+          <div class="cat-info"><div class="cat-name">حل مشكلة</div><div class="cat-desc">واجهتك مشكلة وتبي تحلها حياك هنا</div></div>
+          <div class="cat-arrow">←</div>
+        </div>
+        <div class="cat-item" onclick="selectCat('inquiry')">
+          <div class="cat-icon blue">❓</div>
+          <div class="cat-info"><div class="cat-name">استفسار</div><div class="cat-desc">استفسار عن اي شي يخطر في بالك — عرض، اشتراك، تمديد، كل شي</div></div>
+          <div class="cat-arrow">←</div>
+        </div>
+        <div class="cat-item" onclick="selectCat('support')">
+          <div class="cat-icon green">🛡️</div>
+          <div class="cat-info"><div class="cat-name">الدعم الفني</div><div class="cat-desc">لو تبي تتواصل مع وكلاء الدعم الفني تفضل من هنا</div></div>
+          <div class="cat-arrow">←</div>
+        </div>
+      </div>
+      <div class="footer"><a href="index.html">← العودة لموقع Prime</a></div>
+    </div>
+
+    <div id="formScreen" style="display:none;flex-direction:column;height:100%">
+      <div class="header">
+        <button class="back-btn" onclick="backToCats()">→</button>
+        <div class="avatar">💬</div>
+        <div><h2 id="formCatTitle">الدعم الفني</h2><p class="status"><span class="dot"></span> متصل الآن</p></div>
+      </div>
+      <div class="form-area">
+        <label>الاسم *</label>
+        <input type="text" id="tName" placeholder="اسمك">
+        <label>رقم التواصل (ايميل أو يوزر ديسكورد) *</label>
+        <input type="text" id="tContact" placeholder="طريقة التواصل معك">
+        <label>الرسالة *</label>
+        <textarea id="tMessage" rows="4" placeholder="اشرح مشكلتك بالتفصيل..."></textarea>
+        <button class="send-btn" onclick="submitTicket()" style="width:100%;padding:14px;font-size:15px">إرسال التذكرة ✅</button>
+      </div>
+    </div>
+
+    <div id="chatScreen" style="display:none;flex-direction:column;flex:1;overflow:hidden;height:100%">
+      <div class="header">
+        <button class="back-btn" onclick="backToCats()">→</button>
+        <div class="avatar">💬</div>
+        <div><h2 id="chatTitle">الدعم الفني</h2><p class="status"><span class="dot"></span> متصل الآن</p></div>
+      </div>
+      <div class="msgs" id="msgsBox"></div>
+      <div class="input-area">
+        <input type="text" id="msgInput" placeholder="اكتب رسالتك..." onkeydown="if(event.key==='Enter')sendMsg()">
+        <button class="send-btn" onclick="sendMsg()">إرسال</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+var CAT_NAMES={problem:"حل مشكلة",inquiry:"استفسار",support:"الدعم الفني"};
+var selectedCat=null;
+
+function selectCat(cat){
+  selectedCat=cat;
+  document.getElementById("catScreen").style.display="none";
+  document.getElementById("formScreen").style.display="flex";
+  document.getElementById("formCatTitle").textContent=CAT_NAMES[cat];
+}
+function backToCats(){
+  document.getElementById("formScreen").style.display="none";
+  document.getElementById("chatScreen").style.display="none";
+  document.getElementById("catScreen").style.display="flex";
+}
+async function submitTicket(){
+  var name=document.getElementById("tName").value.trim();
+  var contact=document.getElementById("tContact").value.trim();
+  var message=document.getElementById("tMessage").value.trim();
+  if(!name||!contact||!message){alert("املأ جميع الحقول");return;}
+  var r=await fetch("/api/tickets/create",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name,contact,category:selectedCat,message})});
+  var d=await r.json();
+  if(d.success){
+    document.getElementById("formScreen").style.display="none";
+    document.getElementById("chatScreen").style.display="flex";
+    document.getElementById("chatTitle").textContent=CAT_NAMES[selectedCat];
+    var box=document.getElementById("msgsBox");
+    // رسالة المستخدم + رسالة تلقائية واحدة فقط
+    box.innerHTML='<div class="msg user"><div class="msg-av user">ز</div><div class="msg-text user">'+message.replace(/</g,'&lt;')+'</div></div>'+
+      '<div class="msg bot"><div class="msg-av bot">د</div><div class="msg-text bot">الرجاء شرح مشكلتك بالتفصيل ⚠️</div></div>';
+    box.scrollTop=box.scrollHeight;
+  }else{
+    alert(d.error||"خطأ");
+  }
+}
+function sendMsg(){
+  var input=document.getElementById("msgInput");
+  var text=input.value.trim();
+  if(!text)return;
+  var box=document.getElementById("msgsBox");
+  box.innerHTML+='<div class="msg user"><div class="msg-av user">ز</div><div class="msg-text user">'+text.replace(/</g,'&lt;')+'</div></div>';
+  input.value="";
+  box.scrollTop=box.scrollHeight;
+  // رد تلقائي واحد فقط بعد إرسال المستخدم لأول رسالة
+  setTimeout(function(){
+    box.innerHTML+='<div class="msg bot"><div class="msg-av bot">د</div><div class="msg-text bot">تم توجيه مشكلتك إلى وكلاء الدعم الفني لدينا، سيتم التواصل معك في أقرب وقت ممكن ✅</div></div>';
+    box.scrollTop=box.scrollHeight;
+  },1500);
+}
+</script>
+</body>
+</html>

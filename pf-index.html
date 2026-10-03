@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prime website</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Tahoma,Arial,sans-serif}
+body{background:radial-gradient(ellipse at top,#1a1f0e 0%,#0a0c06 60%);color:#e8f0d8;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.container{max-width:800px;width:100%}
+.logo{width:80px;height:80px;margin:0 auto 16px;border-radius:20px;background:linear-gradient(135deg,#558B2F,#8BC34A);display:flex;align-items:center;justify-content:center;font-weight:800;color:#0d1505;font-size:36px;box-shadow:0 10px 30px rgba(139,195,74,.3)}
+h1{font-size:32px;font-weight:800;text-align:center;background:linear-gradient(90deg,#9CCC65,#C0CA33);-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:8px}
+.sub{text-align:center;color:#AED581;font-size:14px;margin-bottom:40px}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+@media(max-width:600px){.cards{grid-template-columns:1fr}}
+.card{background:rgba(20,26,12,.85);backdrop-filter:blur(14px);border:1px solid rgba(139,195,74,.2);border-radius:20px;padding:36px 28px;text-align:center;cursor:pointer;transition:.3s;text-decoration:none;color:inherit;display:block}
+.card:hover{transform:translateY(-6px);box-shadow:0 20px 40px rgba(139,195,74,.2);border-color:#8BC34A}
+.card-icon{width:64px;height:64px;margin:0 auto 16px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:30px}
+.card-user .card-icon{background:rgba(59,130,246,.15)}
+.card-agent .card-icon{background:rgba(139,195,74,.15)}
+.card h2{font-size:20px;font-weight:700;margin-bottom:8px;color:#e8f0d8}
+.card p{font-size:13px;color:#9aa885;line-height:1.6;margin-bottom:20px}
+.card-btn{display:inline-block;padding:12px 32px;border-radius:10px;font-weight:700;font-size:15px;transition:.2s}
+.card-user .card-btn{background:linear-gradient(90deg,#2563eb,#3b82f6);color:#fff}
+.card-agent .card-btn{background:linear-gradient(90deg,#558B2F,#8BC34A);color:#0d1505}
+.footer{text-align:center;margin-top:40px;font-size:12px;color:#6b7a55}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="logo">P</div>
+  <h1>Prime website</h1>
+  <p class="sub">لوحة تحكم البوتات — مجاني غير محدود</p>
+  <div class="cards">
+    <a href="login.html?mode=user" class="card card-user">
+      <div class="card-icon">👤</div>
+      <h2>تسجيل دخول الأعضاء</h2>
+      <p>للمستخدمين الذين لديهم حساب — للدخول إلى لوحة تحكم البوتات وإعدادات الديسكورد</p>
+      <span class="card-btn">دخول الأعضاء</span>
+    </a>
+    <a href="login.html?mode=agent" class="card card-agent">
+      <div class="card-icon">🛡️</div>
+      <h2>تسجيل دخول وكلاء الدعم</h2>
+      <p>لوكلاء الدعم الفني — لإدارة التذاكر والحسابات ووكلاء الدعم</p>
+      <span class="card-btn">دخول الوكلاء</span>
+    </a>
+  </div>
+  <p class="footer">Prime website © 2024</p>
+</div>
+</body>
+</html>
